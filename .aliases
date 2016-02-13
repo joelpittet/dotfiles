@@ -26,6 +26,8 @@ alias oo="open ."
 alias d7="z drupal7"
 alias d8="z drupal8"
 alias drupalcs="phpcs --standard=Drupal --extensions='php,module,inc,install,test,profile,theme,js,css,info,txt'"
+alias gr8="git reset --hard origin/8.0.x"
+alias gr81="git reset --hard origin/8.1.x"
 
 # Log files
 #alias phplog='tail -f /Applications/MAMP/logs/php_error.log'
@@ -79,16 +81,16 @@ alias dcc='drush cc all'
 # Default Tower to open in 'Status' view.
 #alias gittower='gittower -s '
 
-alias xddis='mv /usr/local/etc/php/5.5/conf.d/ext-xdebug.ini /usr/local/etc/php/5.5/conf.d/ext-xdebug.ini.dis && sudo apachectl restart'
-alias xden='mv /usr/local/etc/php/5.5/conf.d/ext-xdebug.ini.dis /usr/local/etc/php/5.5/conf.d/ext-xdebug.ini && sudo apachectl restart'
-alias xhdis='mv /usr/local/etc/php/5.5/conf.d/ext-xhprof.ini /usr/local/etc/php/5.5/conf.d/ext-xhprof.ini.dis && sudo apachectl restart'
-alias xhen='mv /usr/local/etc/php/5.5/conf.d/ext-xhprof.ini.dis /usr/local/etc/php/5.5/conf.d/ext-xhprof.ini && sudo apachectl restart'
+alias xddis='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{,dis} && brew services restart php56'
+alias xden ='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{dis,} && brew services restart php56'
+alias xhdis='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{,dis} && brew services restart php56'
+alias xhen ='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{dis,} && brew services restart php56'
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
-  colorflag="--color"
+	colorflag="--color"
 else # OS X `ls`
-  colorflag="-G"
+	colorflag="-G"
 fi
 
 # List all files colorized in long format
@@ -111,8 +113,8 @@ alias sudo='sudo '
 # Gzip-enabled `curl`
 alias gurl="curl --compressed"
 
-# Get OS X Software Updates, and update installed Ruby gems, Homebrew, and their installed packages
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade --all; brew cleanup; sudo gem update; composer selfupdate'
+# Get OS X Software Updates, and update installed global node packages, Homebrew, and their installed packages.
+alias update='sudo softwareupdate -i -a; brew update; brew upgrade --all; brew cleanup; npm update -g; composer selfupdate'
 
 # IP addresses
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -127,6 +129,9 @@ alias flush="dscacheutil -flushcache && killall -HUP mDNSResponder"
 
 # Clean up LaunchServices to remove duplicates in the “Open With” menu
 alias lscleanup="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user && killall Finder"
+
+# Brew Services
+alias bs="brew services"
 
 # View HTTP traffic
 #alias sniff="sudo ngrep -d 'en1' -t '^(GET|POST) ' 'tcp and port 80'"
@@ -177,10 +182,6 @@ alias spoton="sudo mdutil -a -i on"
 # PlistBuddy alias, because sometimes `defaults` just doesn’t cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
 
-# Ring the terminal bell, and put a badge on Terminal.app’s Dock icon
-# (useful when executing time-consuming commands)
-alias badge="tput bel"
-
 # Intuitive map function
 # For example, to list all directories that contain a certain file:
 # find . -name .gitattributes | map dirname
@@ -188,7 +189,7 @@ alias map="xargs -n1"
 
 # One of @janmoesen’s ProTip™s
 for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
-  alias "$method"="lwp-request -m '$method'"
+	alias "$method"="lwp-request -m '$method'"
 done
 
 # IOS SIMULATOR
@@ -198,5 +199,5 @@ alias ios='open /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimul
 alias stfu="osascript -e 'set volume output muted true' && echo 'shhh! I am trying to sleep!'"
 alias pumpitup="osascript -e 'set volume 7' && echo 'Dialed to 11!'"
 
-# SASS
+# Ruby SASS
 alias watch="bundle exec compass watch"
