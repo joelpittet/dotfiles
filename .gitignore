@@ -15,8 +15,6 @@ Thumbs.db
 
 # Below from http://drupal.org/node/1542048
 # Patch/diff artifacts.
-*.patch
-*.diff
 *.orig
 *.rej
 interdiff*.txt
@@ -32,3 +30,10 @@ search_krumo
 
 # Drupal development modules symlinked into every local install.
 _dev_modules
+
+# Projects
+.idea
+.project
+
+# Lock Files.
+.~lock*
