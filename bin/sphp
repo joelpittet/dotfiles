@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "Usage: sphp [phpversion]"
+	exit 1
+fi
+
+currentversion="`php -r \"echo str_replace('.', '', substr(phpversion(), 0, 3));\"`"
+newversion="$1"
+
+shortOld="`php -r \"echo substr(phpversion(), 0, 1);\"`"
+shortNew="`php -r \"echo substr('$1', 0, 1);\"`"
+
+brew list php$newversion 2> /dev/null > /dev/null
+
+if [ $? -eq 0 ]; then
+	echo "PHP version $newversion found"
+
+	echo "Unlinking old binaries..."
+	brew services stop php$currentversion
+	brew unlink php$currentversion 2> /dev/null > /dev/null
+
+	echo "Linking new binaries..."
+	brew link php$newversion
+	brew services start php$newversion
+
+	#echo "Linking new modphp addon..."
+	#sudo ln -sf `brew list php$newversion | grep libphp` /usr/local/lib/libphp${shortNew}.so
+
+	echo "Done."
+else
+	echo "PHP version $newversion was not found."
+	exit 1
+fi
