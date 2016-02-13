@@ -31,6 +31,11 @@
 	# http://blackpixel.com/blog/2012/11/code-review-kaleidoscope.html
 	ksreview = "!sh -c 'SHA=${1:-HEAD}; BRANCH=${2:-master}; if [ $SHA == $BRANCH ] ; then SHA=HEAD; fi; git difftool -y -t Kaleidoscope $BRANCH...$SHA;' -"
 
+	st = status
+	ci = commit
+	br = branch
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ci)%C(bold blue)<%an>%Creset' --abbrev-commit
+
 [apply]
 	# Detect whitespace errors when applying a patch
 	whitespace = fix
@@ -42,6 +47,8 @@
 	# Always use Unix line endings in checked out files
 	autocrlf = input
 	safecrlf = false
+	ignorecase = false
+	filemode = false
 
 [help]
 	# Automatically correct typos after 3 seconds (30 deciseconds)
@@ -90,7 +97,7 @@
 	# Always rebase with git pull. git pull --no-rebase to override.
 	autosetuprebase = always
 [push]
-	default = simple
+	default = tracking
 
 # Kaleidoscope.app as difftool and mergetool.
 [difftool "Kaleidoscope"]
@@ -101,7 +108,11 @@
 	prompt = false
 [mergetool "Kaleidoscope"]
 	cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot
+	trustExitCode = true
 [mergetool]
 	prompt = false
+	keepBackup = false
 [merge]
 	tool = Kaleidoscope
+[remote "origin"]
+	push = HEAD
