@@ -1,0 +1,136 @@
+diff --git a/core/modules/views/src/Tests/Handler/AreaEntityTest.php b/core/modules/views/src/Tests/Handler/AreaEntityTest.php
+index 4bc9af7..b97a87e 100644
+--- a/core/modules/views/src/Tests/Handler/AreaEntityTest.php
++++ b/core/modules/views/src/Tests/Handler/AreaEntityTest.php
+@@ -128,8 +128,8 @@ public function doTestRender($entities) {
+     $preview = $view->preview('default', [$entities[1]->id()]);
+     $this->setRawContent(\Drupal::service('renderer')->renderRoot($preview));
+     $view_class = 'js-view-dom-id-' . $view->dom_id;
+-    $header_xpath = '//div[@class = "' . $view_class . '"]/div[1]';
+-    $footer_xpath = '//div[@class = "' . $view_class . '"]/div[3]';
++    $header_xpath = '//div[@class = "' . $view_class . '"]/header[1]';
++    $footer_xpath = '//div[@class = "' . $view_class . '"]/footer[1]';
+ 
+     $result = $this->xpath($header_xpath);
+     $this->assertTrue(strpos(trim((string) $result[0]), $entities[0]->label()) !== FALSE, 'The rendered entity appears in the header of the view.');
+@@ -164,7 +164,7 @@ public function doTestRender($entities) {
+     $preview = $view->preview('default', array($entities[1]->id()));
+     $this->setRawContent($renderer->renderRoot($preview));
+     $view_class = 'js-view-dom-id-' . $view->dom_id;
+-    $result = $this->xpath('//div[@class = "' . $view_class . '"]/div[1]');
++    $result = $this->xpath('//div[@class = "' . $view_class . '"]/header[1]');
+     $this->assertTrue(strpos(trim((string) $result[0]), $entities[0]->label()) !== FALSE, 'The rendered entity appears in the header of the view.');
+     $this->assertTrue(strpos(trim((string) $result[0]), 'test') !== FALSE, 'The rendered entity appeared in the right view mode.');
+ 
+@@ -173,7 +173,7 @@ public function doTestRender($entities) {
+     $preview = $view->preview('default', array($entities[2]->id()));
+     $this->setRawContent($renderer->renderRoot($preview));
+     $view_class = 'js-view-dom-id-' . $view->dom_id;
+-    $result = $this->xpath('//div[@class = "' . $view_class . '"]/div[3]');
++    $result = $this->xpath('//div[@class = "' . $view_class . '"]/footer[1]');
+     $this->assertTrue(strpos($result[0], $entities[2]->label()) === FALSE, 'The rendered entity does not appear in the footer of the view.');
+ 
+     // Test the available view mode options.
+diff --git a/core/modules/views/src/Tests/Plugin/StyleMappingTest.php b/core/modules/views/src/Tests/Plugin/StyleMappingTest.php
+index b6aeb0b..58984fe 100644
+--- a/core/modules/views/src/Tests/Plugin/StyleMappingTest.php
++++ b/core/modules/views/src/Tests/Plugin/StyleMappingTest.php
+@@ -53,7 +53,7 @@ protected function mappedOutputHelper($view) {
+     $output = $view->preview();
+     $rendered_output = \Drupal::service('renderer')->renderRoot($output);
+     $this->storeViewPreview($rendered_output);
+-    $rows = $this->elements->body->div->div->div;
++    $rows = $this->elements->body->div->div;
+     $data_set = $this->dataSet();
+ 
+     $count = 0;
+diff --git a/core/modules/views/src/Tests/Plugin/StyleUnformattedTest.php b/core/modules/views/src/Tests/Plugin/StyleUnformattedTest.php
+index 40c534d..ae0ef10 100644
+--- a/core/modules/views/src/Tests/Plugin/StyleUnformattedTest.php
++++ b/core/modules/views/src/Tests/Plugin/StyleUnformattedTest.php
+@@ -32,7 +32,7 @@ function testDefaultRowClasses() {
+     $output = $view->preview();
+     $this->storeViewPreview(\Drupal::service('renderer')->renderRoot($output));
+ 
+-    $rows = $this->elements->body->div->div->div;
++    $rows = $this->elements->body->div->div;
+     $count = 0;
+     $count_result = count($view->result);
+     foreach ($rows as $row) {
+diff --git a/core/modules/views/templates/views-view.html.twig b/core/modules/views/templates/views-view.html.twig
+index 9a661b8..e81b1ab 100644
+--- a/core/modules/views/templates/views-view.html.twig
++++ b/core/modules/views/templates/views-view.html.twig
+@@ -39,55 +39,30 @@
+ %}
+ <div{{ attributes.addClass(classes) }}>
+   {{ title_prefix }}
+-  {% if title %}
+-    {{ title }}
+-  {% endif %}
++  {{ title }}
+   {{ title_suffix }}
++
+   {% if header %}
+-    <div>
++    <header>
+       {{ header }}
+-    </div>
+-  {% endif %}
+-  {% if exposed %}
+-    <div>
+-      {{ exposed }}
+-    </div>
+-  {% endif %}
+-  {% if attachment_before %}
+-    <div>
+-      {{ attachment_before }}
+-    </div>
++    </header>
+   {% endif %}
+ 
+-  {% if rows %}
+-    <div>
+-      {{ rows }}
+-    </div>
+-  {% elseif empty %}
+-    <div>
+-      {{ empty }}
+-    </div>
+-  {% endif %}
++  {{ exposed }}
++  {{ attachment_before }}
++
++  {{ rows }}
++  {{ empty }}
++  {{ pager }}
++
++  {{ attachment_after }}
++  {{ more }}
+ 
+-  {% if pager %}
+-    {{ pager }}
+-  {% endif %}
+-  {% if attachment_after %}
+-    <div>
+-      {{ attachment_after }}
+-    </div>
+-  {% endif %}
+-  {% if more %}
+-    {{ more }}
+-  {% endif %}
+   {% if footer %}
+-    <div>
++    <footer>
+       {{ footer }}
+-    </div>
+-  {% endif %}
+-  {% if feed_icons %}
+-    <div>
+-      {{ feed_icons }}
+-    </div>
++    </footer>
+   {% endif %}
++
++  {{ feed_icons }}
+ </div>

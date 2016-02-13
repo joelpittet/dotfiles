@@ -1,0 +1,1123 @@
+diff --git a/core/modules/migrate/config/schema/migrate.destination.schema.yml b/core/modules/migrate/config/schema/migrate.destination.schema.yml
+index 139164d..c622f4c 100644
+--- a/core/modules/migrate/config/schema/migrate.destination.schema.yml
++++ b/core/modules/migrate/config/schema/migrate.destination.schema.yml
+@@ -17,14 +17,6 @@ migrate.destination.config:
+       type: string
+       label: 'Configuration name'
+ 
+-migrate.destination.entity:user:
+-  type: migrate_destination
+-  label: 'User'
+-  mapping:
+-    md5_passwords:
+-      type: boolean
+-      label: 'Passwords'
+-
+ migrate.destination.entity:file:
+   type: migrate_destination
+   label: 'Picture'
+diff --git a/core/modules/migrate/migrate.services.yml b/core/modules/migrate/migrate.services.yml
+index c4e52e0..a797c43 100644
+--- a/core/modules/migrate/migrate.services.yml
++++ b/core/modules/migrate/migrate.services.yml
+@@ -20,6 +20,3 @@ services:
+   plugin.manager.migrate.id_map:
+     class: Drupal\migrate\Plugin\MigratePluginManager
+     arguments: [id_map, '@container.namespaces', '@cache.discovery', '@module_handler']
+-  password_migrate:
+-    class: Drupal\migrate\MigratePassword
+-    arguments: ['@password_original']
+diff --git a/core/modules/migrate_drupal/config/schema/migrate_drupal.source.schema.yml b/core/modules/migrate_drupal/config/schema/migrate_drupal.source.schema.yml
+index fdd6b94..fff9aaa 100644
+--- a/core/modules/migrate_drupal/config/schema/migrate_drupal.source.schema.yml
++++ b/core/modules/migrate_drupal/config/schema/migrate_drupal.source.schema.yml
+@@ -102,14 +102,6 @@ migrate.source.d6_comment_variable:
+       type: migrate_entity_constant
+       label: 'Constants'
+ 
+-migrate.source.d6_profile_field:
+-  type: migrate_source_sql
+-  label: 'Drupal 6 profile field'
+-  mapping:
+-    constants:
+-      type: migrate_entity_constant
+-      label: 'Constants'
+-
+ migrate.source.d6_field_formatter_settings:
+   type: migrate_source_sql
+   label: 'Drupal 6 field formatter settings'
+@@ -142,44 +134,6 @@ migrate.source.d6_field_instance_per_view_mode:
+       type: migrate_entity_constant
+       label: 'Constants'
+ 
+-migrate.source.d6_user:
+-  type: migrate_source_sql
+-  label: 'Drupal 6 user'
+-  mapping:
+-    constants:
+-      type: mapping
+-      label: 'Constants'
+-      mapping:
+-        key:
+-          type: string
+-          label: 'User data key'
+-        module:
+-          type: string
+-          label: 'Module name'
+-
+-migrate.source.d6_user_picture_file:
+-  type: migrate_source_sql
+-  label: 'Drupal 6 user picure display'
+-  mapping:
+-    constants:
+-      type: mapping
+-      label: 'Constant'
+-      mapping:
+-        is_public:
+-          type: boolean
+-          label: 'Public'
+-
+-migrate.source.d6_user_picture_instance:
+-  type: migrate_source_sql
+-  label: 'Drupal 6 user picure display'
+-  mapping:
+-    provider:
+-      type: string
+-      label: 'Provider'
+-    constants:
+-      type: migrate_entity_constant
+-      label: 'Constants'
+-
+ migrate_entity_constant:
+   type: mapping
+   mapping:
+diff --git a/core/modules/user/config/schema/user.destination.schema.yml b/core/modules/user/config/schema/user.destination.schema.yml
+new file mode 100644
+index 0000000..e95158e
+--- /dev/null
++++ b/core/modules/user/config/schema/user.destination.schema.yml
+@@ -0,0 +1,9 @@
++# Schema for the migrate destination plugin.
++
++migrate.destination.entity:user:
++  type: migrate_destination
++  label: 'User'
++  mapping:
++    md5_passwords:
++      type: boolean
++      label: 'Passwords'
+diff --git a/core/modules/user/config/schema/user.source.schema.yml b/core/modules/user/config/schema/user.source.schema.yml
+new file mode 100644
+index 0000000..f1ff1b8
+--- /dev/null
++++ b/core/modules/user/config/schema/user.source.schema.yml
+@@ -0,0 +1,47 @@
++# Schema for the user module's migration source plugins.
++
++migrate.source.d6_user:
++  type: migrate_source_sql
++  label: 'Drupal 6 user'
++  mapping:
++    constants:
++      type: mapping
++      label: 'Constants'
++      mapping:
++        key:
++          type: string
++          label: 'User data key'
++        module:
++          type: string
++          label: 'Module name'
++
++migrate.source.d6_user_picture_file:
++  type: migrate_source_sql
++  label: 'Drupal 6 user picure display'
++  mapping:
++    constants:
++      type: mapping
++      label: 'Constant'
++      mapping:
++        is_public:
++          type: boolean
++          label: 'Public'
++
++migrate.source.d6_user_picture_instance:
++  type: migrate_source_sql
++  label: 'Drupal 6 user picure display'
++  mapping:
++    provider:
++      type: string
++      label: 'Provider'
++    constants:
++      type: migrate_entity_constant
++      label: 'Constants'
++
++migrate.source.d6_profile_field:
++  type: migrate_source_sql
++  label: 'Drupal 6 profile field'
++  mapping:
++    constants:
++      type: migrate_entity_constant
++      label: 'Constants'
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_profile_values.yml b/core/modules/user/migration_templates/d6_profile_values.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_profile_values.yml
+rename to core/modules/user/migration_templates/d6_profile_values.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user.yml b/core/modules/user/migration_templates/d6_user.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user.yml
+rename to core/modules/user/migration_templates/d6_user.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_contact_settings.yml b/core/modules/user/migration_templates/d6_user_contact_settings.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_contact_settings.yml
+rename to core/modules/user/migration_templates/d6_user_contact_settings.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_mail.yml b/core/modules/user/migration_templates/d6_user_mail.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_mail.yml
+rename to core/modules/user/migration_templates/d6_user_mail.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_picture_entity_display.yml b/core/modules/user/migration_templates/d6_user_picture_entity_display.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_picture_entity_display.yml
+rename to core/modules/user/migration_templates/d6_user_picture_entity_display.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_picture_entity_form_display.yml b/core/modules/user/migration_templates/d6_user_picture_entity_form_display.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_picture_entity_form_display.yml
+rename to core/modules/user/migration_templates/d6_user_picture_entity_form_display.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_picture_field.yml b/core/modules/user/migration_templates/d6_user_picture_field.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_picture_field.yml
+rename to core/modules/user/migration_templates/d6_user_picture_field.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_picture_field_instance.yml b/core/modules/user/migration_templates/d6_user_picture_field_instance.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_picture_field_instance.yml
+rename to core/modules/user/migration_templates/d6_user_picture_field_instance.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_picture_file.yml b/core/modules/user/migration_templates/d6_user_picture_file.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_picture_file.yml
+rename to core/modules/user/migration_templates/d6_user_picture_file.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_profile_entity_display.yml b/core/modules/user/migration_templates/d6_user_profile_entity_display.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_profile_entity_display.yml
+rename to core/modules/user/migration_templates/d6_user_profile_entity_display.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_profile_entity_form_display.yml b/core/modules/user/migration_templates/d6_user_profile_entity_form_display.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_profile_entity_form_display.yml
+rename to core/modules/user/migration_templates/d6_user_profile_entity_form_display.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_profile_field.yml b/core/modules/user/migration_templates/d6_user_profile_field.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_profile_field.yml
+rename to core/modules/user/migration_templates/d6_user_profile_field.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_profile_field_instance.yml b/core/modules/user/migration_templates/d6_user_profile_field_instance.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_profile_field_instance.yml
+rename to core/modules/user/migration_templates/d6_user_profile_field_instance.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_role.yml b/core/modules/user/migration_templates/d6_user_role.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_role.yml
+rename to core/modules/user/migration_templates/d6_user_role.yml
+diff --git a/core/modules/migrate_drupal/migration_templates/d6_user_settings.yml b/core/modules/user/migration_templates/d6_user_settings.yml
+similarity index 100%
+rename from core/modules/migrate_drupal/migration_templates/d6_user_settings.yml
+rename to core/modules/user/migration_templates/d6_user_settings.yml
+diff --git a/core/modules/migrate/src/MigratePassword.php b/core/modules/user/src/MigratePassword.php
+similarity index 89%
+rename from core/modules/migrate/src/MigratePassword.php
+rename to core/modules/user/src/MigratePassword.php
+index 479aac8..cc1000c 100644
+--- a/core/modules/migrate/src/MigratePassword.php
++++ b/core/modules/user/src/MigratePassword.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate\MigratePassword.
++ * Contains \Drupal\user\MigratePassword.
+  */
+ 
+-namespace Drupal\migrate;
++namespace Drupal\user;
+ 
+ use Drupal\Core\Password\PasswordInterface;
+ 
+@@ -81,4 +81,11 @@ public function disableMd5Prefixing() {
+     $this->enabled = FALSE;
+   }
+ 
++  /**
++   * {@inheritdoc}
++   */
++  public function getCountLog2($setting) {
++    return $this->originalPassword->getCountLog2($setting);
++  }
++
+ }
+diff --git a/core/modules/migrate/src/Plugin/migrate/destination/EntityUser.php b/core/modules/user/src/Plugin/migrate/destination/EntityUser.php
+similarity index 93%
+rename from core/modules/migrate/src/Plugin/migrate/destination/EntityUser.php
+rename to core/modules/user/src/Plugin/migrate/destination/EntityUser.php
+index 786988f..5352092 100644
+--- a/core/modules/migrate/src/Plugin/migrate/destination/EntityUser.php
++++ b/core/modules/user/src/Plugin/migrate/destination/EntityUser.php
+@@ -2,18 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate\Plugin\migrate\destination\EntityUser.
++ * Contains \Drupal\user\Plugin\migrate\destination\EntityUser.
+  */
+ 
+-namespace Drupal\migrate\Plugin\migrate\destination;
++namespace Drupal\user\Plugin\migrate\destination;
+ 
+ use Drupal\Core\Entity\EntityManagerInterface;
+ use Drupal\Core\Entity\EntityStorageInterface;
+ use Drupal\Core\Password\PasswordInterface;
+ use Drupal\migrate\Entity\MigrationInterface;
+ use Drupal\migrate\MigrateException;
+-use Drupal\migrate\MigratePassword;
+-use Drupal\migrate\Plugin\MigratePluginManager;
++use Drupal\user\MigratePassword;
++use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
+ use Drupal\migrate\Row;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+diff --git a/core/modules/migrate/src/Plugin/migrate/destination/UserData.php b/core/modules/user/src/Plugin/migrate/destination/UserData.php
+similarity index 93%
+rename from core/modules/migrate/src/Plugin/migrate/destination/UserData.php
+rename to core/modules/user/src/Plugin/migrate/destination/UserData.php
+index eb16ccd..5ae639f 100644
+--- a/core/modules/migrate/src/Plugin/migrate/destination/UserData.php
++++ b/core/modules/user/src/Plugin/migrate/destination/UserData.php
+@@ -2,14 +2,15 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate\Plugin\migrate\destination\UserData.
++ * Contains \Drupal\user\Plugin\migrate\destination\UserData.
+  */
+ 
+-namespace Drupal\migrate\Plugin\migrate\destination;
++namespace Drupal\user\Plugin\migrate\destination;
+ 
+ use Drupal\migrate\Entity\MigrationInterface;
+ use Drupal\user\UserData as UserDataStorage;
+ use Drupal\migrate\Row;
++use Drupal\migrate\Plugin\migrate\destination\DestinationBase;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+ 
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/ProfileFieldSettings.php b/core/modules/user/src/Plugin/migrate/process/d6/ProfileFieldSettings.php
+similarity index 81%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/process/d6/ProfileFieldSettings.php
+rename to core/modules/user/src/Plugin/migrate/process/d6/ProfileFieldSettings.php
+index 4928294..87e3d38 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/ProfileFieldSettings.php
++++ b/core/modules/user/src/Plugin/migrate/process/d6/ProfileFieldSettings.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\process\d6\ProfileFieldSettings.
++ * Contains \Drupal\user\Plugin\migrate\process\d6\ProfileFieldSettings.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\process\d6;
++namespace Drupal\user\Plugin\migrate\process\d6;
+ 
+ use Drupal\migrate\MigrateExecutableInterface;
+ use Drupal\migrate\ProcessPluginBase;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserPicture.php b/core/modules/user/src/Plugin/migrate/process/d6/UserPicture.php
+similarity index 93%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserPicture.php
+rename to core/modules/user/src/Plugin/migrate/process/d6/UserPicture.php
+index 537eacf..8438092 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserPicture.php
++++ b/core/modules/user/src/Plugin/migrate/process/d6/UserPicture.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\process\d6\UserPicture.
++ * Contains \Drupal\user\Plugin\migrate\process\d6\UserPicture.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\process\d6;
++namespace Drupal\user\Plugin\migrate\process\d6;
+ 
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+ use Drupal\migrate\Entity\MigrationInterface;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserUpdate7002.php b/core/modules/user/src/Plugin/migrate/process/d6/UserUpdate7002.php
+similarity index 90%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserUpdate7002.php
+rename to core/modules/user/src/Plugin/migrate/process/d6/UserUpdate7002.php
+index 6424583..9104b439c 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserUpdate7002.php
++++ b/core/modules/user/src/Plugin/migrate/process/d6/UserUpdate7002.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\process\d6\UserUpdate7002.
++ * Contains \Drupal\user\Plugin\migrate\process\d6\UserUpdate7002.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\process\d6;
++namespace Drupal\user\Plugin\migrate\process\d6;
+ 
+ use Drupal\migrate\MigrateExecutableInterface;
+ use Drupal\migrate\ProcessPluginBase;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserUpdate8002.php b/core/modules/user/src/Plugin/migrate/process/d6/UserUpdate8002.php
+similarity index 83%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserUpdate8002.php
+rename to core/modules/user/src/Plugin/migrate/process/d6/UserUpdate8002.php
+index e9ac311..ff8a816 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/process/d6/UserUpdate8002.php
++++ b/core/modules/user/src/Plugin/migrate/process/d6/UserUpdate8002.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\process\d6\UserUpdate8002.
++ * Contains \Drupal\user\Plugin\migrate\process\d6\UserUpdate8002.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\process\d6;
++namespace Drupal\user\Plugin\migrate\process\d6;
+ use Drupal\migrate\MigrateExecutableInterface;
+ use Drupal\migrate\ProcessPluginBase;
+ use Drupal\migrate\Row;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/ProfileField.php b/core/modules/user/src/Plugin/migrate/source/d6/ProfileField.php
+similarity index 96%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/ProfileField.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/ProfileField.php
+index a559796..68498b2 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/ProfileField.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/ProfileField.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\ProfileField.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\ProfileField.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+ use Drupal\migrate\Row;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/ProfileFieldValues.php b/core/modules/user/src/Plugin/migrate/source/d6/ProfileFieldValues.php
+similarity index 95%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/ProfileFieldValues.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/ProfileFieldValues.php
+index 807ee43..9c17eff 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/ProfileFieldValues.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/ProfileFieldValues.php
+@@ -2,17 +2,15 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\ProfileFieldValues.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\ProfileFieldValues.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
+-
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate\Row;
+ use Drupal\migrate\Plugin\SourceEntityInterface;
+ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+ 
+-
+ /**
+  * Drupal 6 profile fields values source.
+  *
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/Role.php b/core/modules/user/src/Plugin/migrate/source/d6/Role.php
+similarity index 94%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/Role.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/Role.php
+index 31be203..cc6bcaa 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/Role.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/Role.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\Role.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\Role.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate\Row;
+ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/User.php b/core/modules/user/src/Plugin/migrate/source/d6/User.php
+similarity index 96%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/User.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/User.php
+index 568629b..c347149 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/User.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/User.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\User.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\User.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate\Plugin\SourceEntityInterface;
+ use Drupal\migrate\Row;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPicture.php b/core/modules/user/src/Plugin/migrate/source/d6/UserPicture.php
+similarity index 87%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPicture.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/UserPicture.php
+index c45f269..e4658d8 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPicture.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/UserPicture.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\UserPicture.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\UserPicture.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+ 
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPictureFile.php b/core/modules/user/src/Plugin/migrate/source/d6/UserPictureFile.php
+similarity index 92%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPictureFile.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/UserPictureFile.php
+index a47bab7..ff0d1ae 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPictureFile.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/UserPictureFile.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\UserPictureFile.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\UserPictureFile.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+ use Drupal\migrate\Row;
+diff --git a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPictureInstance.php b/core/modules/user/src/Plugin/migrate/source/d6/UserPictureInstance.php
+similarity index 90%
+rename from core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPictureInstance.php
+rename to core/modules/user/src/Plugin/migrate/source/d6/UserPictureInstance.php
+index f3a9654..48e409b 100644
+--- a/core/modules/migrate_drupal/src/Plugin/migrate/source/d6/UserPictureInstance.php
++++ b/core/modules/user/src/Plugin/migrate/source/d6/UserPictureInstance.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Plugin\migrate\source\d6\UserPictureInstance.
++ * Contains \Drupal\user\Plugin\migrate\source\d6\UserPictureInstance.
+  */
+ 
+-namespace Drupal\migrate_drupal\Plugin\migrate\source\d6;
++namespace Drupal\user\Plugin\migrate\source\d6;
+ 
+ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+ use Drupal\migrate\Plugin\migrate\source\DummyQueryTrait;
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserConfigsTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserConfigsTest.php
+similarity index 96%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserConfigsTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserConfigsTest.php
+index 956e444..9fa2bab 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserConfigsTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserConfigsTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserConfigsTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserConfigsTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\config\Tests\SchemaCheckTestTrait;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Upgrade variables to user.*.yml.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserConfigsTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserContactSettingsTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserContactSettingsTest.php
+similarity index 87%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserContactSettingsTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserContactSettingsTest.php
+index 355b43e..33637af 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserContactSettingsTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserContactSettingsTest.php
+@@ -2,15 +2,17 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserContactSettingsTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserContactSettingsTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
++
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Users contact settings migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserContactSettingsTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureEntityDisplayTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureEntityDisplayTest.php
+similarity index 85%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureEntityDisplayTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureEntityDisplayTest.php
+index 3a9effb..4e76357 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureEntityDisplayTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureEntityDisplayTest.php
+@@ -2,15 +2,17 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserPictureEntityDisplayTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserPictureEntityDisplayTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
++
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * User picture entity display.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserPictureEntityDisplayTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureEntityFormDisplayTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureEntityFormDisplayTest.php
+similarity index 86%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureEntityFormDisplayTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureEntityFormDisplayTest.php
+index ebbd0f9..868977b 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureEntityFormDisplayTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureEntityFormDisplayTest.php
+@@ -2,15 +2,17 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserPictureEntityFormDisplayTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserPictureEntityFormDisplayTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
++
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * User picture entity form display.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserPictureEntityFormDisplayTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureFieldTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureFieldTest.php
+similarity index 80%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureFieldTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureFieldTest.php
+index aebf590..d3c1acb 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureFieldTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureFieldTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserPictureFieldTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserPictureFieldTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\field\Entity\FieldStorageConfig;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * User picture field migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserPictureFieldTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureFileTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureFileTest.php
+similarity index 90%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureFileTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureFileTest.php
+index fe17626..650e6f2 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureFileTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureFileTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserPictureFileTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserPictureFileTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\file\Entity\File;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * User pictures migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserPictureFileTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureInstanceTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureInstanceTest.php
+similarity index 89%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureInstanceTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureInstanceTest.php
+index aac48e1..45813ad 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserPictureInstanceTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserPictureInstanceTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserPictureInstanceTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserPictureInstanceTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\field\Entity\FieldConfig;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * User picture field instance migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserPictureInstanceTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileEntityDisplayTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileEntityDisplayTest.php
+similarity index 94%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileEntityDisplayTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileEntityDisplayTest.php
+index b38f2b7..a1e9d16 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileEntityDisplayTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileEntityDisplayTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserProfileEntityDisplayTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserProfileEntityDisplayTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\Core\Database\Database;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Tests the user profile entity display migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserProfileEntityDisplayTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileEntityFormDisplayTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileEntityFormDisplayTest.php
+similarity index 94%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileEntityFormDisplayTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileEntityFormDisplayTest.php
+index d088289..a863abe 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileEntityFormDisplayTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileEntityFormDisplayTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserProfileEntityFormDisplayTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserProfileEntityFormDisplayTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\Core\Database\Database;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Tests the user profile entity form display migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserProfileEntityFormDisplayTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileFieldInstanceTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileFieldInstanceTest.php
+similarity index 95%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileFieldInstanceTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileFieldInstanceTest.php
+index cb834d7..2b775ed 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileFieldInstanceTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileFieldInstanceTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserProfileFieldInstanceTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserProfileFieldInstanceTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\field\Entity\FieldConfig;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Tests the user profile field instance migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserProfileFieldInstanceTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileFieldTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileFieldTest.php
+similarity index 93%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileFieldTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileFieldTest.php
+index b331a59..fd739ae 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileFieldTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileFieldTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserProfileFieldTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserProfileFieldTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\field\Entity\FieldStorageConfig;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Tests the user profile field migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserProfileFieldTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileValuesTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileValuesTest.php
+similarity index 96%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileValuesTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileValuesTest.php
+index fa4489e..303013f 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserProfileValuesTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserProfileValuesTest.php
+@@ -2,19 +2,19 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserProfileValuesTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserProfileValuesTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+-use Drupal\migrate\MigrateExecutable;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ use Drupal\Core\Database\Database;
+ use Drupal\user\Entity\User;
+ 
+ /**
+  * User profile values migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserProfileValuesTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserRoleTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserRoleTest.php
+similarity index 94%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserRoleTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserRoleTest.php
+index ebd2b6b..1d637e7 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserRoleTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserRoleTest.php
+@@ -2,17 +2,18 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserRoleTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserRoleTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\user\Entity\Role;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Upgrade user roles to user.role.*.yml.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserTest.php b/core/modules/user/src/Tests/Migrate/d6/MigrateUserTest.php
+similarity index 96%
+rename from core/modules/migrate_drupal/src/Tests/d6/MigrateUserTest.php
+rename to core/modules/user/src/Tests/Migrate/d6/MigrateUserTest.php
+index d584c3a..dcc387c 100644
+--- a/core/modules/migrate_drupal/src/Tests/d6/MigrateUserTest.php
++++ b/core/modules/user/src/Tests/Migrate/d6/MigrateUserTest.php
+@@ -2,20 +2,21 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate_drupal\Tests\d6\MigrateUserTest.
++ * Contains \Drupal\user\Tests\Migrate\d6\MigrateUserTest.
+  */
+ 
+-namespace Drupal\migrate_drupal\Tests\d6;
++namespace Drupal\user\Tests\Migrate\d6;
+ 
+ use Drupal\user\Entity\User;
+ use Drupal\file\Entity\File;
+ use Drupal\Core\Database\Database;
+ use Drupal\user\RoleInterface;
++use Drupal\migrate_drupal\Tests\d6\MigrateDrupal6TestBase;
+ 
+ /**
+  * Users migration.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class MigrateUserTest extends MigrateDrupal6TestBase {
+ 
+diff --git a/core/modules/migrate/src/MigrateServiceProvider.php b/core/modules/user/src/UserServiceProvider.php
+similarity index 81%
+rename from core/modules/migrate/src/MigrateServiceProvider.php
+rename to core/modules/user/src/UserServiceProvider.php
+index 78a60bb..9b61097 100644
+--- a/core/modules/migrate/src/MigrateServiceProvider.php
++++ b/core/modules/user/src/UserServiceProvider.php
+@@ -2,10 +2,10 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\migrate\MigrateServiceProvider.
++ * Contains \Drupal\user\UserServiceProvider.
+  */
+ 
+-namespace Drupal\migrate;
++namespace Drupal\user;
+ 
+ use Drupal\Core\DependencyInjection\ServiceModifierInterface;
+ use Drupal\Core\DependencyInjection\ContainerBuilder;
+@@ -17,7 +17,7 @@
+  * @see \Drupal\migrate\MigratePassword
+  * @see \Drupal\Core\Password\PhpassHashedPassword
+  */
+-class MigrateServiceProvider implements ServiceModifierInterface {
++class UserServiceProvider implements ServiceModifierInterface {
+ 
+   /**
+    * {@inheritdoc}
+diff --git a/core/modules/migrate_drupal/tests/src/Unit/source/d6/ProfileFieldTest.php b/core/modules/user/tests/src/Unit/Migrate/d6/ProfileFieldTest.php
+similarity index 90%
+rename from core/modules/migrate_drupal/tests/src/Unit/source/d6/ProfileFieldTest.php
+rename to core/modules/user/tests/src/Unit/Migrate/d6/ProfileFieldTest.php
+index 4a8609e..ccc2ec2 100644
+--- a/core/modules/migrate_drupal/tests/src/Unit/source/d6/ProfileFieldTest.php
++++ b/core/modules/user/tests/src/Unit/Migrate/d6/ProfileFieldTest.php
+@@ -2,23 +2,23 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\Tests\migrate_drupal\Unit\source\d6\ProfileFieldTest.
++ * Contains \Drupal\Tests\user\Unit\Migrate\d6\ProfileFieldTest.
+  */
+ 
+-namespace Drupal\Tests\migrate_drupal\Unit\source\d6;
++namespace Drupal\Tests\user\Unit\Migrate\d6;
+ 
+ use Drupal\Tests\migrate\Unit\MigrateSqlSourceTestCase;
+ 
+ /**
+  * Tests D6 profile field source plugin.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class ProfileFieldTest extends MigrateSqlSourceTestCase {
+ 
+   // The plugin system is not working during unit testing so the source plugin
+   // class needs to be manually specified.
+-  const PLUGIN_CLASS = 'Drupal\migrate_drupal\Plugin\migrate\source\d6\ProfileField';
++  const PLUGIN_CLASS = 'Drupal\user\Plugin\migrate\source\d6\ProfileField';
+ 
+   // The fake Migration configuration entity.
+   protected $migrationConfiguration = [
+diff --git a/core/modules/migrate_drupal/tests/src/Unit/source/d6/RoleTest.php b/core/modules/user/tests/src/Unit/Migrate/d6/RoleTest.php
+similarity index 89%
+rename from core/modules/migrate_drupal/tests/src/Unit/source/d6/RoleTest.php
+rename to core/modules/user/tests/src/Unit/Migrate/d6/RoleTest.php
+index e9311d7..cf0a4a5 100644
+--- a/core/modules/migrate_drupal/tests/src/Unit/source/d6/RoleTest.php
++++ b/core/modules/user/tests/src/Unit/Migrate/d6/RoleTest.php
+@@ -2,23 +2,23 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\Tests\migrate_drupal\Unit\source\d6\RoleTest.
++ * Contains \Drupal\Tests\user\Unit\Migrate\d6\RoleTest.
+  */
+ 
+-namespace Drupal\Tests\migrate_drupal\Unit\source\d6;
++namespace Drupal\Tests\user\Unit\Migrate\d6;
+ 
+ use Drupal\Tests\migrate\Unit\MigrateSqlSourceTestCase;
+ 
+ /**
+  * Tests D6 role source plugin.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class RoleTest extends MigrateSqlSourceTestCase {
+ 
+   // The plugin system is not working during unit testing so the source plugin
+   // class needs to be manually specified.
+-  const PLUGIN_CLASS = 'Drupal\migrate_drupal\Plugin\migrate\source\d6\Role';
++  const PLUGIN_CLASS = 'Drupal\user\Plugin\migrate\source\d6\Role';
+ 
+   // The fake Migration configuration entity.
+   protected $migrationConfiguration = array(
+diff --git a/core/modules/migrate_drupal/tests/src/Unit/source/d6/UserPictureTest.php b/core/modules/user/tests/src/Unit/Migrate/d6/UserPictureTest.php
+similarity index 77%
+rename from core/modules/migrate_drupal/tests/src/Unit/source/d6/UserPictureTest.php
+rename to core/modules/user/tests/src/Unit/Migrate/d6/UserPictureTest.php
+index de70385..c5f98fd 100644
+--- a/core/modules/migrate_drupal/tests/src/Unit/source/d6/UserPictureTest.php
++++ b/core/modules/user/tests/src/Unit/Migrate/d6/UserPictureTest.php
+@@ -2,21 +2,21 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\Tests\migrate_drupal\Unit\source\d6\UserPictureTest.
++ * Contains \Drupal\Tests\user\Unit\Migrate\d6\UserPictureTest.
+  */
+ 
+-namespace Drupal\Tests\migrate_drupal\Unit\source\d6;
++namespace Drupal\Tests\user\Unit\Migrate\d6;
+ 
+ use Drupal\Tests\migrate\Unit\MigrateSqlSourceTestCase;
+ 
+ /**
+  * Tests D6 user picture source plugin.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class UserPictureTest extends MigrateSqlSourceTestCase {
+ 
+-  const PLUGIN_CLASS = 'Drupal\migrate_drupal\Plugin\migrate\source\d6\UserPicture';
++  const PLUGIN_CLASS = 'Drupal\user\Plugin\migrate\source\d6\UserPicture';
+ 
+   protected $migrationConfiguration = array(
+     'id' => 'test_user_picture',
+diff --git a/core/modules/migrate_drupal/tests/src/Unit/source/d6/UserTest.php b/core/modules/user/tests/src/Unit/Migrate/d6/UserTest.php
+similarity index 89%
+rename from core/modules/migrate_drupal/tests/src/Unit/source/d6/UserTest.php
+rename to core/modules/user/tests/src/Unit/Migrate/d6/UserTest.php
+index 36d4b67..78fad1b 100644
+--- a/core/modules/migrate_drupal/tests/src/Unit/source/d6/UserTest.php
++++ b/core/modules/user/tests/src/Unit/Migrate/d6/UserTest.php
+@@ -2,21 +2,21 @@
+ 
+ /**
+  * @file
+- * Contains \Drupal\Tests\migrate_drupal\Unit\source\d6\UserTest.
++ * Contains \Drupal\Tests\user\Unit\Migrate\d6\UserTest.
+  */
+ 
+-namespace Drupal\Tests\migrate_drupal\Unit\source\d6;
++namespace Drupal\Tests\user\Unit\Migrate\d6;
+ 
+ use Drupal\Tests\migrate\Unit\MigrateSqlSourceTestCase;
+ 
+ /**
+  * Tests D6 user source plugin.
+  *
+- * @group migrate_drupal
++ * @group user
+  */
+ class UserTest extends MigrateSqlSourceTestCase {
+ 
+-  const PLUGIN_CLASS = 'Drupal\migrate_drupal\Plugin\migrate\source\d6\User';
++  const PLUGIN_CLASS = 'Drupal\user\Plugin\migrate\source\d6\User';
+ 
+   protected $migrationConfiguration = array(
+     'id' => 'test',
+diff --git a/core/modules/user/user.services.yml b/core/modules/user/user.services.yml
+index c273cb3..8fc9bf5 100644
+--- a/core/modules/user/user.services.yml
++++ b/core/modules/user/user.services.yml
+@@ -66,6 +66,9 @@ services:
+     arguments: ['@current_user', '@entity.manager']
+     tags:
+       - { name: 'context_provider' }
++  password_migrate:
++    class: Drupal\user\MigratePassword
++    arguments: ['@password_original']
+ 
+ parameters:
+   user.tempstore.expire: 604800

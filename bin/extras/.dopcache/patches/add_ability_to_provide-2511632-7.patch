@@ -1,0 +1,110 @@
+diff --git a/core/modules/menu_link_content/migration_templates/d6_menu_links.yml b/core/modules/menu_link_content/migration_templates/d6_menu_links.yml
+index 6753160..4ee210b 100644
+--- a/core/modules/menu_link_content/migration_templates/d6_menu_links.yml
++++ b/core/modules/menu_link_content/migration_templates/d6_menu_links.yml
+@@ -18,6 +18,7 @@ process:
+       - 0
+       - attributes
+       - title
++    default: ''
+   menu_name:
+     plugin: migration
+     migration: d6_menu
+diff --git a/core/modules/menu_link_content/src/Tests/Migrate/d6/MigrateMenuLinkTest.php b/core/modules/menu_link_content/src/Tests/Migrate/d6/MigrateMenuLinkTest.php
+index 527c354..cf21ebd 100644
+--- a/core/modules/menu_link_content/src/Tests/Migrate/d6/MigrateMenuLinkTest.php
++++ b/core/modules/menu_link_content/src/Tests/Migrate/d6/MigrateMenuLinkTest.php
+@@ -76,6 +76,17 @@ public function testMenuLinks() {
+     $this->assertIdentical(['attributes' => ['title' => '']], $menu_link->link->options);
+     $this->assertIdentical('https://www.drupal.org', $menu_link->link->uri);
+     $this->assertIdentical(0, $menu_link->getWeight());
++
++    // assert that missing title attributes don't stop or break migration.
++    $menu_link = entity_load('menu_link_content', 393);
++    $this->assertIdentical('Test 3', $menu_link->getTitle());
++    $this->assertIdentical('secondary-links', $menu_link->getMenuName());
++    $this->assertIdentical('', $menu_link->getDescription());
++    $this->assertIdentical(TRUE, $menu_link->isEnabled());
++    $this->assertIdentical(FALSE, $menu_link->isExpanded());
++    $this->assertIdentical([], $menu_link->link->options);
++    $this->assertIdentical('internal:/user/login', $menu_link->link->uri);
++    $this->assertIdentical(15, $menu_link->getWeight());
+   }
+ 
+ }
+diff --git a/core/modules/migrate/src/Plugin/migrate/process/Extract.php b/core/modules/migrate/src/Plugin/migrate/process/Extract.php
+index 4c31285..9fb68e3 100644
+--- a/core/modules/migrate/src/Plugin/migrate/process/Extract.php
++++ b/core/modules/migrate/src/Plugin/migrate/process/Extract.php
+@@ -33,7 +33,12 @@ public function transform($value, MigrateExecutableInterface $migrate_executable
+     }
+     $new_value = NestedArray::getValue($value, $this->configuration['index'], $key_exists);
+     if (!$key_exists) {
+-      throw new MigrateException('Array index missing, extraction failed.');
++      if (isset($this->configuration['default'])) {
++        $new_value = $this->configuration['default'];
++      }
++      else {
++        throw new MigrateException('Array index missing, extraction failed.');
++      }
+     }
+     return $new_value;
+   }
+diff --git a/core/modules/migrate/tests/src/Unit/process/ExtractTest.php b/core/modules/migrate/tests/src/Unit/process/ExtractTest.php
+index 6fbe4b8..650c6a1 100644
+--- a/core/modules/migrate/tests/src/Unit/process/ExtractTest.php
++++ b/core/modules/migrate/tests/src/Unit/process/ExtractTest.php
+@@ -51,4 +51,13 @@ public function testExtractFail() {
+     $this->plugin->transform(array('bar' => 'foo'), $this->migrateExecutable, $this->row, 'destinationproperty');
+   }
+ 
++  /**
++   * Tests unsuccessful extraction.
++   */
++  public function testExtractFailDefault() {
++    $plugin = new Extract(['index' => ['foo'], 'default' => 'test'], 'map', []);
++    $value = $plugin->transform(['bar' => 'foo'], $this->migrateExecutable, $this->row, 'destinationproperty');
++    $this->assertSame($value, 'test', '');
++  }
++
+ }
+diff --git a/core/modules/migrate_drupal/src/Tests/Table/d6/MenuLinks.php b/core/modules/migrate_drupal/src/Tests/Table/d6/MenuLinks.php
+index d6de491..37e9251 100644
+--- a/core/modules/migrate_drupal/src/Tests/Table/d6/MenuLinks.php
++++ b/core/modules/migrate_drupal/src/Tests/Table/d6/MenuLinks.php
+@@ -5154,8 +5154,34 @@ public function load() {
+       'p8' => '0',
+       'p9' => '0',
+       'updated' => '0',
++    ))->values(array(
++      'menu_name' => 'secondary-links',
++      'mlid' => '393',
++      'plid' => '0',
++      'link_path' => 'user/login',
++      'router_path' => 'user/login',
++      'link_title' => 'Test 3',
++      'options' => 'a:0:{}',
++      'module' => 'menu',
++      'hidden' => '0',
++      'external' => '0',
++      'has_children' => '1',
++      'expanded' => '0',
++      'weight' => '15',
++      'depth' => '1',
++      'customized' => '1',
++      'p1' => '138',
++      'p2' => '0',
++      'p3' => '0',
++      'p4' => '0',
++      'p5' => '0',
++      'p6' => '0',
++      'p7' => '0',
++      'p8' => '0',
++      'p9' => '0',
++      'updated' => '0',
+     ))->execute();
+   }
+ 
+ }
+-#a594b05a60a1a549e86f4c190c2f2f4e
++#8e902b6a6367838c553b463060befdd3

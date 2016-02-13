@@ -1,0 +1,852 @@
+diff --git a/core/modules/config/config.links.task.yml b/core/modules/config/config.links.task.yml
+index 5a894f0..9e9383b 100644
+--- a/core/modules/config/config.links.task.yml
++++ b/core/modules/config/config.links.task.yml
+@@ -3,32 +3,32 @@ config.sync:
+   base_route: config.sync
+   title: 'Synchronize'
+ 
+-config.full:
++config.import:
+   route_name: config.import_full
+-  title: 'Full Import/Export'
++  title: 'Import'
+   base_route: config.sync
+ 
+-config.single:
+-  route_name: config.import_single
+-  title: 'Single Import/Export'
++config.export:
++  route_name: config.export_full
++  title: 'Export'
+   base_route: config.sync
+ 
+ config.export_full:
+   route_name: config.export_full
+-  title: Export
+-  parent_id: config.full
++  title: Full
++  parent_id: config.export
+ 
+ config.import_full:
+   route_name: config.import_full
+-  title: Import
+-  parent_id: config.full
++  title: Full
++  parent_id: config.import
+ 
+ config.export_single:
+   route_name: config.export_single
+-  title: Export
+-  parent_id: config.single
++  title: Single
++  parent_id: config.export
+ 
+ config.import_single:
+   route_name: config.import_single
+-  title: Import
+-  parent_id: config.single
++  title: Single
++  parent_id: config.import
+diff --git a/core/modules/config/config.routing.yml b/core/modules/config/config.routing.yml
+index 8eebac3..8c806e8 100644
+--- a/core/modules/config/config.routing.yml
++++ b/core/modules/config/config.routing.yml
+@@ -6,6 +6,14 @@ config.sync:
+   requirements:
+     _permission: 'synchronize configuration'
+ 
++config.sync_confirm:
++  path: '/admin/config/development/configuration/sync/confirm'
++  defaults:
++    _form: 'Drupal\config\Form\ConfigSyncConfirmForm'
++    _title: 'Confirm configuration synchronization'
++  requirements:
++    _permission: 'synchronize configuration'
++
+ config.diff:
+   path: '/admin/config/development/configuration/sync/diff/{source_name}/{target_name}'
+   defaults:
+diff --git a/core/modules/config/src/Form/ConfigSync.php b/core/modules/config/src/Form/ConfigSync.php
+index 7f240e3..05d3de5 100644
+--- a/core/modules/config/src/Form/ConfigSync.php
++++ b/core/modules/config/src/Form/ConfigSync.php
+@@ -7,23 +7,14 @@
+ 
+ namespace Drupal\config\Form;
+ 
+-use Drupal\Component\Uuid\UuidInterface;
+-use Drupal\Core\Config\ConfigImporterException;
+-use Drupal\Core\Config\ConfigImporter;
+-use Drupal\Core\Config\TypedConfigManagerInterface;
+-use Drupal\Core\Entity\EntityManagerInterface;
+-use Drupal\Core\Extension\ModuleHandlerInterface;
+-use Drupal\Core\Extension\ModuleInstallerInterface;
+-use Drupal\Core\Extension\ThemeHandlerInterface;
+ use Drupal\Core\Config\ConfigManagerInterface;
+ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Config\StorageInterface;
+ use Drupal\Core\Form\FormStateInterface;
+-use Drupal\Core\Lock\LockBackendInterface;
++use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
+ use Drupal\Core\Config\StorageComparer;
+ use Drupal\Core\Render\RendererInterface;
+ use Drupal\Core\Url;
+-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -32,13 +23,6 @@
+ class ConfigSync extends FormBase {
+ 
+   /**
+-   * The database lock object.
+-   *
+-   * @var \Drupal\Core\Lock\LockBackendInterface
+-   */
+-  protected $lock;
+-
+-  /**
+    * The staging configuration object.
+    *
+    * @var \Drupal\Core\Config\StorageInterface
+@@ -60,13 +44,6 @@ class ConfigSync extends FormBase {
+   protected $snapshotStorage;
+ 
+   /**
+-   * Event dispatcher.
+-   *
+-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+-   */
+-  protected $eventDispatcher;
+-
+-  /**
+    * The configuration manager.
+    *
+    * @var \Drupal\Core\Config\ConfigManagerInterface;
+@@ -74,39 +51,18 @@ class ConfigSync extends FormBase {
+   protected $configManager;
+ 
+   /**
+-   * The typed config manager.
+-   *
+-   * @var \Drupal\Core\Config\TypedConfigManagerInterface
+-   */
+-  protected $typedConfigManager;
+-
+-  /**
+-   * The module handler.
+-   *
+-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+-   */
+-  protected $moduleHandler;
+-
+-  /**
+-   * The theme handler.
+-   *
+-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
+-   */
+-  protected $themeHandler;
+-
+-  /**
+-   * The module installer.
++   * The renderer.
+    *
+-   * @var \Drupal\Core\Extension\ModuleInstallerInterface
++   * @var \Drupal\Core\Render\RendererInterface
+    */
+-  protected $moduleInstaller;
++  protected $renderer;
+ 
+   /**
+-   * The renderer.
++   * The key value store.
+    *
+-   * @var \Drupal\Core\Render\RendererInterface
++   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
+    */
+-  protected $renderer;
++  protected $keyValueExpirable;
+ 
+   /**
+    * Constructs the object.
+@@ -117,35 +73,20 @@ class ConfigSync extends FormBase {
+    *   The target storage.
+    * @param \Drupal\Core\Config\StorageInterface $snapshot_storage
+    *   The snapshot storage.
+-   * @param \Drupal\Core\Lock\LockBackendInterface $lock
+-   *   The lock object.
+-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+-   *   Event dispatcher.
+    * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
+    *   Configuration manager.
+-   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config
+-   *   The typed configuration manager.
+-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+-   *   The module handler.
+-   * @param \Drupal\Core\Extension\ModuleInstallerInterface $module_installer
+-   *   The module installer.
+-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
+-   *   The theme handler.
+-   * @param \Drupal\Core\Render\RendererInterface
++   * @param \Drupal\Core\Render\RendererInterface $renderer
+    *   The renderer.
++   * @param \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $key_value_expirable
++   *   The expirable key/value store.
+    */
+-  public function __construct(StorageInterface $staging_storage, StorageInterface $active_storage, StorageInterface $snapshot_storage, LockBackendInterface $lock, EventDispatcherInterface $event_dispatcher, ConfigManagerInterface $config_manager, TypedConfigManagerInterface $typed_config, ModuleHandlerInterface $module_handler, ModuleInstallerInterface $module_installer, ThemeHandlerInterface $theme_handler, RendererInterface $renderer) {
++  public function __construct(StorageInterface $staging_storage, StorageInterface $active_storage, StorageInterface $snapshot_storage, ConfigManagerInterface $config_manager, RendererInterface $renderer, KeyValueStoreExpirableInterface $key_value_expirable) {
+     $this->stagingStorage = $staging_storage;
+     $this->activeStorage = $active_storage;
+     $this->snapshotStorage = $snapshot_storage;
+-    $this->lock = $lock;
+-    $this->eventDispatcher = $event_dispatcher;
+     $this->configManager = $config_manager;
+-    $this->typedConfigManager = $typed_config;
+-    $this->moduleHandler = $module_handler;
+-    $this->moduleInstaller = $module_installer;
+-    $this->themeHandler = $theme_handler;
+     $this->renderer = $renderer;
++    $this->keyValueExpirable = $key_value_expirable;
+   }
+ 
+   /**
+@@ -156,14 +97,9 @@ public static function create(ContainerInterface $container) {
+       $container->get('config.storage.staging'),
+       $container->get('config.storage'),
+       $container->get('config.storage.snapshot'),
+-      $container->get('lock.persistent'),
+-      $container->get('event_dispatcher'),
+       $container->get('config.manager'),
+-      $container->get('config.typed'),
+-      $container->get('module_handler'),
+-      $container->get('module_installer'),
+-      $container->get('theme_handler'),
+-      $container->get('renderer')
++      $container->get('renderer'),
++      $container->get('keyvalue.expirable')->get('config_import')
+     );
+   }
+ 
+@@ -245,8 +181,8 @@ public function buildForm(array $form, FormStateInterface $form_state) {
+           continue;
+         }
+ 
+-        // @todo A table caption would be more appropriate, but does not have the
+-        //   visual importance of a heading.
++        // @todo A table caption would be more appropriate, but does not have
++        //   the visual importance of a heading.
+         $form[$collection][$config_change_type]['heading'] = array(
+           '#type' => 'html_tag',
+           '#tag' => 'h3',
+@@ -296,7 +232,7 @@ public function buildForm(array $form, FormStateInterface $form_state) {
+               'class' => array('use-ajax'),
+               'data-dialog-type' => 'modal',
+               'data-dialog-options' => json_encode(array(
+-                'width' => 700
++                'width' => 700,
+               )),
+             ),
+           );
+@@ -319,100 +255,10 @@ public function buildForm(array $form, FormStateInterface $form_state) {
+    * {@inheritdoc}
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
+-    $config_importer = new ConfigImporter(
+-      $form_state->get('storage_comparer'),
+-      $this->eventDispatcher,
+-      $this->configManager,
+-      $this->lock,
+-      $this->typedConfigManager,
+-      $this->moduleHandler,
+-      $this->moduleInstaller,
+-      $this->themeHandler,
+-      $this->getStringTranslation()
+-    );
+-    if ($config_importer->alreadyImporting()) {
+-      drupal_set_message($this->t('Another request may be synchronizing configuration already.'));
+-    }
+-    else{
+-      try {
+-        $sync_steps = $config_importer->initialize();
+-        $batch = array(
+-          'operations' => array(),
+-          'finished' => array(get_class($this), 'finishBatch'),
+-          'title' => t('Synchronizing configuration'),
+-          'init_message' => t('Starting configuration synchronization.'),
+-          'progress_message' => t('Completed @current step of @total.'),
+-          'error_message' => t('Configuration synchronization has encountered an error.'),
+-          'file' => drupal_get_path('module', 'config') . '/config.admin.inc',
+-        );
+-        foreach ($sync_steps as $sync_step) {
+-          $batch['operations'][] = array(array(get_class($this), 'processBatch'), array($config_importer, $sync_step));
+-        }
++    $account = $this->currentUser()->id();
++    $this->keyValueExpirable->setWithExpire($account, $form_state->get('storage_comparer'), 60);
+ 
+-        batch_set($batch);
+-      }
+-      catch (ConfigImporterException $e) {
+-        // There are validation errors.
+-        drupal_set_message($this->t('The configuration cannot be imported because it failed validation for the following reasons:'), 'error');
+-        foreach ($config_importer->getErrors() as $message) {
+-          drupal_set_message($message, 'error');
+-        }
+-      }
+-    }
++    // Redirect to the confirmation form.
++    $form_state->setRedirect('config.sync_confirm');
+   }
+-
+-  /**
+-   * Processes the config import batch and persists the importer.
+-   *
+-   * @param \Drupal\Core\Config\ConfigImporter $config_importer
+-   *   The batch config importer object to persist.
+-   * @param string $sync_step
+-   *   The synchronization step to do.
+-   * @param array $context
+-   *   The batch context.
+-   */
+-  public static function processBatch(ConfigImporter $config_importer, $sync_step, &$context) {
+-    if (!isset($context['sandbox']['config_importer'])) {
+-      $context['sandbox']['config_importer'] = $config_importer;
+-    }
+-
+-    $config_importer = $context['sandbox']['config_importer'];
+-    $config_importer->doSyncStep($sync_step, $context);
+-    if ($errors = $config_importer->getErrors()) {
+-      if (!isset($context['results']['errors'])) {
+-        $context['results']['errors'] = array();
+-      }
+-      $context['results']['errors'] += $errors;
+-    }
+-  }
+-
+-  /**
+-   * Finish batch.
+-   *
+-   * This function is a static function to avoid serializing the ConfigSync
+-   * object unnecessarily.
+-   */
+-  public static function finishBatch($success, $results, $operations) {
+-    if ($success) {
+-      if (!empty($results['errors'])) {
+-        foreach ($results['errors'] as $error) {
+-          drupal_set_message($error, 'error');
+-          \Drupal::logger('config_sync')->error($error);
+-        }
+-        drupal_set_message(\Drupal::translation()->translate('The configuration was imported with errors.'), 'warning');
+-      }
+-      else {
+-        drupal_set_message(\Drupal::translation()->translate('The configuration was imported successfully.'));
+-      }
+-    }
+-    else {
+-      // An error occurred.
+-      // $operations contains the operations that remained unprocessed.
+-      $error_operation = reset($operations);
+-      $message = \Drupal::translation()->translate('An error occurred while processing %error_operation with arguments: @arguments', array('%error_operation' => $error_operation[0], '@arguments' => print_r($error_operation[1], TRUE)));
+-      drupal_set_message($message, 'error');
+-    }
+-  }
+-
+-
+ }
+diff --git a/core/modules/config/src/Form/ConfigSyncConfirmForm.php b/core/modules/config/src/Form/ConfigSyncConfirmForm.php
+new file mode 100644
+index 0000000..771ac8c
+--- /dev/null
++++ b/core/modules/config/src/Form/ConfigSyncConfirmForm.php
+@@ -0,0 +1,287 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\config\Form\ConfigSyncConfirmForm.
++ */
++
++namespace Drupal\config\Form;
++
++use Drupal\Core\Config\ConfigImporter;
++use Drupal\Core\Config\ConfigImporterException;
++use Drupal\Core\Config\ConfigManagerInterface;
++use Drupal\Core\Config\TypedConfigManagerInterface;
++use Drupal\Core\Extension\ModuleHandlerInterface;
++use Drupal\Core\Extension\ModuleInstallerInterface;
++use Drupal\Core\Extension\ThemeHandlerInterface;
++use Drupal\Core\Form\ConfirmFormBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
++use Drupal\Core\Lock\LockBackendInterface;
++use Drupal\Core\Url;
++use Symfony\Component\EventDispatcher\EventDispatcherInterface;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++
++class ConfigSyncConfirmForm extends ConfirmFormBase {
++
++  /**
++   * The database lock object.
++   *
++   * @var \Drupal\Core\Lock\LockBackendInterface
++   */
++  protected $lock;
++
++  /**
++   * Event dispatcher.
++   *
++   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
++   */
++  protected $eventDispatcher;
++
++  /**
++   * The configuration manager.
++   *
++   * @var \Drupal\Core\Config\ConfigManagerInterface;
++   */
++  protected $configManager;
++
++  /**
++   * The typed config manager.
++   *
++   * @var \Drupal\Core\Config\TypedConfigManagerInterface
++   */
++  protected $typedConfigManager;
++
++  /**
++   * The module handler.
++   *
++   * @var \Drupal\Core\Extension\ModuleHandlerInterface
++   */
++  protected $moduleHandler;
++
++  /**
++   * The module installer.
++   *
++   * @var \Drupal\Core\Extension\ModuleInstallerInterface
++   */
++  protected $moduleInstaller;
++
++  /**
++   * The theme handler.
++   *
++   * @var \Drupal\Core\Extension\ThemeHandlerInterface
++   */
++  protected $themeHandler;
++
++  /**
++   * The expirable key value store.
++   *
++   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
++   */
++  protected $keyValueExpirable;
++
++  /**
++   *
++   *
++   * @var \Drupal\Core\Config\StorageComparer
++   */
++  protected $storageComparer;
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId() {
++    return 'config_import_confirm_form';
++  }
++
++  /**
++   * Constructs a ConfigSyncConfirmForm object.
++   *
++   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
++   *   The event dispatcher.
++   * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
++   *   Configuration manager.
++   * @param \Drupal\Core\Lock\LockBackendInterface $lock
++   *   The lock object.
++   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
++   *   The typed configuration manager.
++   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
++   *   The module handler.
++   * @param \Drupal\Core\Extension\ModuleInstallerInterface $module_installer
++   *   The module installer.
++   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
++   *   The theme handler.
++   * @param \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $key_value_expirable
++   *   The expirable key/value store.
++   */
++  public function __construct(EventDispatcherInterface $event_dispatcher, ConfigManagerInterface $config_manager, LockBackendInterface $lock, TypedConfigManagerInterface $typed_config_manager, ModuleHandlerInterface $module_handler, ModuleInstallerInterface $module_installer, ThemeHandlerInterface $theme_handler, KeyValueStoreExpirableInterface $key_value_expirable) {
++    $this->eventDispatcher = $event_dispatcher;
++    $this->configManager = $config_manager;
++    $this->lock = $lock;
++    $this->typedConfigManager = $typed_config_manager;
++    $this->moduleHandler = $module_handler;
++    $this->moduleInstaller = $module_installer;
++    $this->themeHandler = $theme_handler;
++    $this->keyValueExpirable = $key_value_expirable;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container) {
++    return new static(
++      $container->get('event_dispatcher'),
++      $container->get('config.manager'),
++      $container->get('lock.persistent'),
++      $container->get('config.typed'),
++      $container->get('module_handler'),
++      $container->get('module_installer'),
++      $container->get('theme_handler'),
++      $container->get('keyvalue.expirable')->get('config_import')
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildForm(array $form, FormStateInterface $form_state) {
++    $account = $this->currentUser()->id();
++    $this->storageComparer = $this->keyValueExpirable->get($account);
++    return parent::buildForm($form, $form_state);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state) {
++    $config_importer = new ConfigImporter(
++      $this->storageComparer,
++      $this->eventDispatcher,
++      $this->configManager,
++      $this->lock,
++      $this->typedConfigManager,
++      $this->moduleHandler,
++      $this->moduleInstaller,
++      $this->themeHandler,
++      $this->getStringTranslation()
++    );
++    if ($config_importer->alreadyImporting()) {
++      drupal_set_message($this->t('Another request may be synchronizing configuration already.'));
++    }
++    else {
++      try {
++        $sync_steps = $config_importer->initialize();
++        $batch = array(
++          'operations' => array(),
++          'finished' => array(get_class($this), 'finishBatch'),
++          'title' => t('Synchronizing configuration'),
++          'init_message' => t('Starting configuration synchronization.'),
++          'progress_message' => t('Completed @current step of @total.'),
++          'error_message' => t('Configuration synchronization has encountered an error.'),
++          'file' => drupal_get_path('module', 'config') . '/config.admin.inc',
++        );
++        foreach ($sync_steps as $sync_step) {
++          $batch['operations'][] = array(
++            array(get_class($this), 'processBatch'),
++            array($config_importer, $sync_step),
++          );
++        }
++
++        batch_set($batch);
++        $form_state->setRedirect('config.sync');
++      }
++      catch (ConfigImporterException $e) {
++        // There are validation errors.
++        drupal_set_message($this->t('The configuration cannot be imported because it failed validation for the following reasons:'), 'error');
++        foreach ($config_importer->getErrors() as $message) {
++          drupal_set_message($message, 'error');
++        }
++      }
++    }
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getQuestion() {
++    return t('Confirm configuration import');
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getConfirmText() {
++    return $this->t('Import');
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getCancelUrl() {
++    return new Url('config.sync');
++  }
++
++  /**
++   * Processes the config import batch and persists the importer.
++   *
++   * @param \Drupal\Core\Config\ConfigImporter $config_importer
++   *   The batch config importer object to persist.
++   * @param string $sync_step
++   *   The synchronization step to do.
++   * @param array $context
++   *   The batch context.
++   */
++  public static function processBatch(ConfigImporter $config_importer, $sync_step, &$context) {
++    if (!isset($context['sandbox']['config_importer'])) {
++      $context['sandbox']['config_importer'] = $config_importer;
++    }
++
++    $config_importer = $context['sandbox']['config_importer'];
++    $config_importer->doSyncStep($sync_step, $context);
++    if ($errors = $config_importer->getErrors()) {
++      if (!isset($context['results']['errors'])) {
++        $context['results']['errors'] = array();
++      }
++      $context['results']['errors'] += $errors;
++    }
++  }
++
++  /**
++   * Implements callback_batch_finished().
++   *
++   * Performs post-processing for submitForm().
++   * This function is a static function to avoid serializing the ConfigSync
++   * object unnecessarily.
++   *
++   * @param bool $success
++   *   A boolean indicating whether the sync process has completed.
++   * @param array $results
++   *   An array of results information.
++   * @param array $operations
++   *   An array of function calls.
++   */
++  public static function finishBatch($success, $results, $operations) {
++    if ($success) {
++      if (!empty($results['errors'])) {
++        foreach ($results['errors'] as $error) {
++          drupal_set_message($error, 'error');
++          \Drupal::logger('config_sync')->error($error);
++        }
++        drupal_set_message(\Drupal::translation()->translate('The configuration was imported with errors.'), 'warning');
++      }
++      else {
++        drupal_set_message(\Drupal::translation()->translate('The configuration was imported successfully.'));
++      }
++    }
++    else {
++      // An error occurred.
++      // $operations contains the operations that remained unprocessed.
++      $error_operation = reset($operations);
++      $message = \Drupal::translation()->translate('An error occurred while processing %error_operation with arguments: @arguments', array(
++        '%error_operation' => $error_operation[0],
++        '@arguments' => print_r($error_operation[1], TRUE),
++      ));
++      drupal_set_message($message, 'error');
++    }
++  }
++}
+diff --git a/core/modules/config/src/Tests/ConfigExportImportUITest.php b/core/modules/config/src/Tests/ConfigExportImportUITest.php
+index 6a63df7..a0d9a1c 100644
+--- a/core/modules/config/src/Tests/ConfigExportImportUITest.php
++++ b/core/modules/config/src/Tests/ConfigExportImportUITest.php
+@@ -173,6 +173,11 @@ public function testExportImport() {
+     $this->assertText($this->contentType->label());
+ 
+     $this->drupalPostForm(NULL, array(), 'Import all');
++
++    // We now have to confirm the import.
++    $this->assertText(t('This action cannot be undone.'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
++
+     // After importing the snapshot has been updated an there are no warnings.
+     $this->assertNoText(t('Warning message'));
+     $this->assertText(t('There are no configuration changes to import.'));
+@@ -289,6 +294,11 @@ public function testExportImportCollections() {
+     $this->assertLinkByHref('admin/config/development/configuration/sync/diff_collection/collection.test2/config_test.another_delete');
+ 
+     $this->drupalPostForm(NULL, array(), 'Import all');
++
++    // We now have to confirm the import.
++    $this->assertText(t('This action cannot be undone.'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
++
+     $this->assertText(t('There are no configuration changes to import.'));
+ 
+     // Test data in collections.
+diff --git a/core/modules/config/src/Tests/ConfigImportAllTest.php b/core/modules/config/src/Tests/ConfigImportAllTest.php
+index 6e1aaea..5e5d11b 100644
+--- a/core/modules/config/src/Tests/ConfigImportAllTest.php
++++ b/core/modules/config/src/Tests/ConfigImportAllTest.php
+@@ -130,6 +130,7 @@ public function testInstallUninstall() {
+ 
+     // Import the configuration thereby re-installing all the modules.
+     $this->drupalPostForm('admin/config/development/configuration', array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     // Modules have been installed that have services.
+     $this->rebuildContainer();
+ 
+diff --git a/core/modules/config/src/Tests/ConfigImportInstallProfileTest.php b/core/modules/config/src/Tests/ConfigImportInstallProfileTest.php
+index 64b2d5d..0f63ad0 100644
+--- a/core/modules/config/src/Tests/ConfigImportInstallProfileTest.php
++++ b/core/modules/config/src/Tests/ConfigImportInstallProfileTest.php
+@@ -60,6 +60,7 @@ public function testInstallProfileValidation() {
+     $staging->write('core.extension', $core);
+ 
+     $this->drupalPostForm('admin/config/development/configuration', array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText('The configuration cannot be imported because it failed validation for the following reasons:');
+     $this->assertText('Unable to uninstall the Testing config import profile since it is the install profile.');
+ 
+@@ -74,6 +75,7 @@ public function testInstallProfileValidation() {
+     $theme['default'] = 'classy';
+     $staging->write('system.theme', $theme);
+     $this->drupalPostForm('admin/config/development/configuration', array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText('The configuration was imported successfully.');
+     $this->rebuildContainer();
+     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('syslog'), 'The syslog module has been uninstalled.');
+diff --git a/core/modules/config/src/Tests/ConfigImportUITest.php b/core/modules/config/src/Tests/ConfigImportUITest.php
+index dd00edf..442f5db 100644
+--- a/core/modules/config/src/Tests/ConfigImportUITest.php
++++ b/core/modules/config/src/Tests/ConfigImportUITest.php
+@@ -123,6 +123,7 @@ function testImport() {
+ 
+     // Import and verify that both do not appear anymore.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertNoRaw('<td>' . $name);
+     $this->assertNoRaw('<td>' . $dynamic_name);
+     $this->assertNoRaw('<td>core.extension');
+@@ -195,6 +196,7 @@ function testImport() {
+ 
+     // Import and verify that both do not appear anymore.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertNoRaw('<td>core.extension');
+     $this->assertNoRaw('<td>system.theme');
+     $this->assertNoRaw('<td>action.settings');
+@@ -240,6 +242,7 @@ function testImportLock() {
+ 
+     // Attempt to import configuration and verify that an error message appears.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText(t('Another request may be synchronizing configuration already.'));
+ 
+     // Release the lock, just to keep testing sane.
+@@ -324,6 +327,7 @@ public function testImportValidation() {
+     $this->drupalGet('admin/config/development/configuration');
+     $this->assertNoText(t('There are no configuration changes to import.'));
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm(NULL, array(), t('Import'));
+ 
+     // Verify that the validation messages appear.
+     $this->assertText('The configuration cannot be imported because it failed validation for the following reasons:');
+@@ -346,6 +350,7 @@ public function testConfigUninstallConfigException() {
+ 
+     // Import and verify that both do not appear anymore.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText('Can not uninstall the Configuration module as part of a configuration synchronization through the user interface.');
+   }
+ 
+@@ -403,6 +408,7 @@ function testImportErrorLog() {
+ 
+     // Attempt to import configuration and verify that an error message appears.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText(SafeMarkup::format('Deleted and replaced configuration entity "@name"', array('@name' => $name_secondary)));
+     $this->assertText(t('The configuration was imported with errors.'));
+     $this->assertNoText(t('The configuration was imported successfully.'));
+@@ -433,8 +439,10 @@ public function testEntityBundleDelete() {
+     // and the node type, body field and entity displays are still scheduled for
+     // removal.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $validation_message = t('Entities exist of type %entity_type and %bundle_label %bundle. These entities need to be deleted before importing.', array('%entity_type' => $node->getEntityType()->getLabel(), '%bundle_label' => $node->getEntityType()->getBundleLabel(), '%bundle' => $node_type->label()));
+     $this->assertRaw($validation_message);
++    $this->drupalGet('admin/config/development/configuration');
+     $this->assertText(format_string('node.type.@type', array('@type' => $node_type->id())));
+     $this->assertText(format_string('field.field.node.@type.body', array('@type' => $node_type->id())));
+     $this->assertText(format_string('core.entity_view_display.node.@type.teaser', array('@type' => $node_type->id())));
+@@ -444,6 +452,7 @@ public function testEntityBundleDelete() {
+     // Delete the node and try to import again.
+     $node->delete();
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertNoRaw($validation_message);
+     $this->assertText(t('There are no configuration changes to import.'));
+     $this->assertNoText(format_string('node.type.@type', array('@type' => $node_type->id())));
+@@ -481,6 +490,7 @@ public function testExtensionValidation() {
+     $staging->write('core.extension', $core);
+ 
+     $this->drupalPostForm('admin/config/development/configuration', array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText('The configuration cannot be imported because it failed validation for the following reasons:');
+     $this->assertText('Unable to uninstall the Text module since the Node module is installed.');
+     $this->assertText('Unable to uninstall the Classy theme since the Bartik theme is installed.');
+diff --git a/core/modules/config/tests/src/Unit/Menu/ConfigLocalTasksTest.php b/core/modules/config/tests/src/Unit/Menu/ConfigLocalTasksTest.php
+index 1da4148..e36435b 100644
+--- a/core/modules/config/tests/src/Unit/Menu/ConfigLocalTasksTest.php
++++ b/core/modules/config/tests/src/Unit/Menu/ConfigLocalTasksTest.php
+@@ -35,11 +35,11 @@ public function testConfigAdminLocalTasks($route, $expected) {
+    */
+   public function getConfigAdminRoutes() {
+     return array(
+-      array('config.sync', array(array('config.sync', 'config.full', 'config.single'))),
+-      array('config.export_full', array(array('config.sync', 'config.full', 'config.single'), array('config.export_full', 'config.import_full'))),
+-      array('config.import_full', array(array('config.sync', 'config.full', 'config.single'), array('config.export_full', 'config.import_full'))),
+-      array('config.export_single', array(array('config.sync', 'config.full', 'config.single'), array('config.export_single', 'config.import_single'))),
+-      array('config.import_single', array(array('config.sync', 'config.full', 'config.single'), array('config.export_single', 'config.import_single'))),
++      array('config.sync', array(array('config.sync', 'config.import', 'config.export'))),
++      array('config.import_full', array(array('config.sync', 'config.import', 'config.export'), array('config.import_full', 'config.import_single'))),
++      array('config.import_single', array(array('config.sync', 'config.import', 'config.export'), array('config.import_full', 'config.import_single'))),
++      array('config.export_full', array(array('config.sync', 'config.import', 'config.export'), array('config.export_full', 'config.export_single'))),
++      array('config.export_single', array(array('config.sync', 'config.import', 'config.export'), array('config.export_full', 'config.export_single'))),
+     );
+   }
+ 
+diff --git a/core/modules/field/src/Tests/FieldImportDeleteUninstallUiTest.php b/core/modules/field/src/Tests/FieldImportDeleteUninstallUiTest.php
+index de793dd..bb85008 100644
+--- a/core/modules/field/src/Tests/FieldImportDeleteUninstallUiTest.php
++++ b/core/modules/field/src/Tests/FieldImportDeleteUninstallUiTest.php
+@@ -106,6 +106,7 @@ public function testImportDeleteUninstall() {
+     // This will purge all the data, delete the field and uninstall the
+     // Telephone and Text modules.
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm(NULL, array(), t('Import'));
+     $this->assertNoText('Field data will be deleted by this synchronization.');
+     $this->rebuildContainer();
+     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('telephone'));
+diff --git a/core/modules/node/src/Tests/NodeTypeRenameConfigImportTest.php b/core/modules/node/src/Tests/NodeTypeRenameConfigImportTest.php
+index af29bce..0abba6e 100644
+--- a/core/modules/node/src/Tests/NodeTypeRenameConfigImportTest.php
++++ b/core/modules/node/src/Tests/NodeTypeRenameConfigImportTest.php
+@@ -131,6 +131,7 @@ public function testConfigurationRename() {
+ 
+     // Run the import.
+     $this->drupalPostForm('admin/config/development/configuration', array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $this->assertText(t('There are no configuration changes to import.'));
+ 
+     $this->assertFalse(NodeType::load($active_type), 'The content no longer exists with the old name.');
+diff --git a/core/modules/options/src/Tests/OptionsFloatFieldImportTest.php b/core/modules/options/src/Tests/OptionsFloatFieldImportTest.php
+index 5be5840..3546946 100644
+--- a/core/modules/options/src/Tests/OptionsFloatFieldImportTest.php
++++ b/core/modules/options/src/Tests/OptionsFloatFieldImportTest.php
+@@ -61,6 +61,7 @@ public function testImport() {
+     // tests \Drupal\Core\Config\Entity\ConfigEntityStorage::importUpdate().
+     $this->drupalGet('admin/config/development/configuration');
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $field_storage = FieldStorageConfig::loadByName('node', $field_name);
+     $this->assertIdentical($field_storage->getSetting('allowed_values'), $array = array('0' => 'Zero', '0.5' => 'Point five'));
+ 
+@@ -70,6 +71,7 @@ public function testImport() {
+ 
+     $this->drupalGet('admin/config/development/configuration');
+     $this->drupalPostForm(NULL, array(), t('Import all'));
++    $this->drupalPostForm('admin/config/development/configuration/sync/confirm', array(), t('Import'));
+     $field_storage = FieldStorageConfig::loadByName('node', $field_name);
+     $this->assertIdentical($field_storage->getSetting('allowed_values'), $array = array('0' => 'Zero', '0.5' => 'Point five'));
+   }

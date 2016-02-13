@@ -1,0 +1,11 @@
+diff --git a/core/modules/config_translation/config_translation.info.yml b/core/modules/config_translation/config_translation.info.yml
+index aebc7f4..44a6829 100644
+--- a/core/modules/config_translation/config_translation.info.yml
++++ b/core/modules/config_translation/config_translation.info.yml
+@@ -4,5 +4,6 @@ description: 'Provides a translation interface for configuration.'
+ package: Multilingual
+ version: VERSION
+ core: 8.x
++configure: config_translation.mapper_list
+ dependencies:
+   - locale

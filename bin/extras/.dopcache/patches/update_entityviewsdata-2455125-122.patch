@@ -1,0 +1,927 @@
+diff --git a/core/modules/aggregator/tests/modules/aggregator_test_views/test_views/views.view.test_aggregator_items.yml b/core/modules/aggregator/tests/modules/aggregator_test_views/test_views/views.view.test_aggregator_items.yml
+index 281cdde..db7b203 100644
+--- a/core/modules/aggregator/tests/modules/aggregator_test_views/test_views/views.view.test_aggregator_items.yml
++++ b/core/modules/aggregator/tests/modules/aggregator_test_views/test_views/views.view.test_aggregator_items.yml
+@@ -79,7 +79,12 @@ display:
+           table: aggregator_item
+           field: timestamp
+           id: timestamp
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: medium
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+           entity_type: aggregator_item
+           entity_field: timestamp
+         author:
+diff --git a/core/modules/block_content/config/optional/views.view.block_content.yml b/core/modules/block_content/config/optional/views.view.block_content.yml
+index ad5e1f9..26d97a8 100644
+--- a/core/modules/block_content/config/optional/views.view.block_content.yml
++++ b/core/modules/block_content/config/optional/views.view.block_content.yml
+@@ -290,12 +290,14 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: short
+-          custom_date_format: ''
+-          timezone: ''
+           entity_type: block_content
+           entity_field: changed
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: short
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+         operations:
+           id: operations
+           table: block_content
+diff --git a/core/modules/comment/config/optional/views.view.comments_recent.yml b/core/modules/comment/config/optional/views.view.comments_recent.yml
+index 6f9c5cd..5e2bb89 100644
+--- a/core/modules/comment/config/optional/views.view.comments_recent.yml
++++ b/core/modules/comment/config/optional/views.view.comments_recent.yml
+@@ -119,7 +119,7 @@ display:
+           table: comment_field_data
+           field: changed
+           relationship: none
+-          plugin_id: date
++          plugin_id: field
+           group_type: group
+           admin_label: ''
+           label: ''
+@@ -163,9 +163,11 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: 'time ago'
+-          custom_date_format: ''
+-          timezone: ''
++          type: timestamp_ago
++          settings:
++            future_format: '@interval hence'
++            past_format: '@interval ago'
++            granularity: 2
+           entity_type: comment
+           entity_field: changed
+       filters:
+diff --git a/core/modules/comment/tests/modules/comment_test_views/test_views/views.view.test_comment_rest.yml b/core/modules/comment/tests/modules/comment_test_views/test_views/views.view.test_comment_rest.yml
+index 0c74efa..851edfd 100644
+--- a/core/modules/comment/tests/modules/comment_test_views/test_views/views.view.test_comment_rest.yml
++++ b/core/modules/comment/tests/modules/comment_test_views/test_views/views.view.test_comment_rest.yml
+@@ -246,10 +246,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: long
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: long
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+         comment_body:
+           id: comment_body
+           table: comment__comment_body
+diff --git a/core/modules/file/config/optional/views.view.files.yml b/core/modules/file/config/optional/views.view.files.yml
+index 5e727fb..8a9cdf0 100644
+--- a/core/modules/file/config/optional/views.view.files.yml
++++ b/core/modules/file/config/optional/views.view.files.yml
+@@ -448,10 +448,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: medium
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: medium
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+           entity_type: file
+           entity_field: created
+         changed:
+@@ -502,10 +504,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: medium
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: medium
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+           entity_type: file
+           entity_field: changed
+         count:
+diff --git a/core/modules/node/config/optional/views.view.content.yml b/core/modules/node/config/optional/views.view.content.yml
+index c8201f2..150cf1f 100644
+--- a/core/modules/node/config/optional/views.view.content.yml
++++ b/core/modules/node/config/optional/views.view.content.yml
+@@ -294,10 +294,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: short
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: short
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+           entity_type: node
+           entity_field: changed
+         operations:
+diff --git a/core/modules/node/config/optional/views.view.glossary.yml b/core/modules/node/config/optional/views.view.glossary.yml
+index 63bf6f7..eab49b7 100644
+--- a/core/modules/node/config/optional/views.view.glossary.yml
++++ b/core/modules/node/config/optional/views.view.glossary.yml
+@@ -172,8 +172,12 @@ display:
+           table: node_field_data
+           field: changed
+           label: 'Last update'
+-          date_format: long
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: long
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+           relationship: none
+           group_type: group
+           admin_label: ''
+@@ -217,8 +221,6 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          custom_date_format: ''
+-          timezone: ''
+           entity_type: node
+           entity_field: changed
+       arguments:
+diff --git a/core/modules/node/src/Plugin/views/wizard/NodeRevision.php b/core/modules/node/src/Plugin/views/wizard/NodeRevision.php
+index d01f7e8..502d47f 100644
+--- a/core/modules/node/src/Plugin/views/wizard/NodeRevision.php
++++ b/core/modules/node/src/Plugin/views/wizard/NodeRevision.php
+@@ -84,7 +84,11 @@ protected function defaultDisplayOptions() {
+     $display_options['fields']['changed']['alter']['html'] = FALSE;
+     $display_options['fields']['changed']['hide_empty'] = FALSE;
+     $display_options['fields']['changed']['empty_zero'] = FALSE;
+-    $display_options['fields']['changed']['plugin_id'] = 'date';
++    $display_options['fields']['changed']['plugin_id'] = 'field';
++    $display_options['fields']['changed']['type'] = 'timestamp';
++    $display_options['fields']['changed']['settings']['date_format'] = 'medium';
++    $display_options['fields']['changed']['settings']['custom_date_format'] = '';
++    $display_options['fields']['changed']['settings']['timezone'] = '';
+ 
+     /* Field: Content revision: Title */
+     $display_options['fields']['title']['id'] = 'title';
+diff --git a/core/modules/rest/tests/modules/rest_test_views/test_views/views.view.test_serializer_display_field.yml b/core/modules/rest/tests/modules/rest_test_views/test_views/views.view.test_serializer_display_field.yml
+index 7f7769d..2b981f0 100644
+--- a/core/modules/rest/tests/modules/rest_test_views/test_views/views.view.test_serializer_display_field.yml
++++ b/core/modules/rest/tests/modules/rest_test_views/test_views/views.view.test_serializer_display_field.yml
+@@ -57,7 +57,12 @@ display:
+           id: created
+           table: views_test_data
+           field: created
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: medium
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+       sorts:
+         created:
+           id: created
+diff --git a/core/modules/system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.php b/core/modules/system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.php
+new file mode 100644
+index 0000000..2d8da45
+--- /dev/null
++++ b/core/modules/system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.php
+@@ -0,0 +1,31 @@
++<?php
++
++/**
++ * @file
++ * Contains database additions to drupal-8.bare.standard.php.gz for testing the
++ * upgrade path of https://www.drupal.org/node/2455125.
++ */
++
++use Drupal\Core\Database\Database;
++
++$connection = Database::getConnection();
++
++// Structure of a view with timestamp fields.
++$views_configs = [];
++
++$views_configs[] = \Drupal\Component\Serialization\Yaml::decode(file_get_contents(__DIR__ . '/drupal-8.views-entity-views-data-2455125.yml'));
++
++foreach ($views_configs as $views_config) {
++$connection->insert('config')
++  ->fields(array(
++      'collection',
++      'name',
++      'data',
++    ))
++  ->values(array(
++      'collection' => '',
++      'name' => 'views.view.' . $views_config['id'],
++      'data' => serialize($views_config),
++    ))
++  ->execute();
++}
+diff --git a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml b/core/modules/system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.yml
+similarity index 67%
+copy from core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml
+copy to core/modules/system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.yml
+index 2764a8f..e3c1b63 100644
+--- a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml
++++ b/core/modules/system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.yml
+@@ -1,16 +1,17 @@
++uuid: e693b165-0e14-4dee-9909-9f0892037c23
+ langcode: en
+ status: true
+ dependencies:
+   module:
+-    - aggregator
+-id: test_style_opml
+-label: test_style_opml
++    - user
++id: update_test
++label: 'Update Test'
+ module: views
+ description: ''
+-tag: default
+-base_table: aggregator_feed
+-base_field: fid
+-core: '8'
++tag: ''
++base_table: users_field_data
++base_field: uid
++core: 8.x
+ display:
+   default:
+     display_plugin: default
+@@ -19,58 +20,63 @@ display:
+     position: 0
+     display_options:
+       access:
+-        type: none
++        type: perm
++        options:
++          perm: 'access user profiles'
+       cache:
+         type: tag
++        options: {  }
+       query:
+         type: views_query
++        options:
++          disable_sql_rewrite: false
++          distinct: false
++          replica: false
++          query_comment: ''
++          query_tags: {  }
+       exposed_form:
+         type: basic
++        options:
++          submit_button: Apply
++          reset_button: false
++          reset_button_label: Reset
++          exposed_sorts_label: 'Sort by'
++          expose_sort_order: true
++          sort_asc_label: Asc
++          sort_desc_label: Desc
+       pager:
+-        type: full
++        type: none
+         options:
+-          items_per_page: 10
++          items_per_page: 0
++          offset: 0
+       style:
+         type: default
+       row:
+-        type: 'entity:aggregator_feed'
++        type: fields
+       fields:
+-        title:
+-          id: title
+-          table: aggregator_feed
+-          field: title
+-          relationship: none
+-          group_type: group
+-          admin_label: ''
+-          label: Title
+-          exclude: false
++        name:
++          id: name
++          table: users_field_data
++          field: name
++          entity_type: user
++          entity_field: name
++          label: ''
+           alter:
+             alter_text: false
+-            text: ''
+             make_link: false
+-            path: ''
+             absolute: false
+-            external: false
+-            replace_spaces: false
+-            path_case: none
+-            trim_whitespace: false
+-            alt: ''
+-            rel: ''
+-            link_class: ''
+-            prefix: ''
+-            suffix: ''
+-            target: ''
+-            nl2br: false
+-            max_length: 0
+-            word_boundary: true
+-            ellipsis: true
+-            more_link: false
+-            more_link_text: ''
+-            more_link_path: ''
+-            strip_tags: false
+             trim: false
+-            preserve_tags: ''
++            word_boundary: false
++            ellipsis: false
++            strip_tags: false
+             html: false
++          hide_empty: false
++          empty_zero: false
++          plugin_id: field
++          relationship: none
++          group_type: group
++          admin_label: ''
++          exclude: false
+           element_type: ''
+           element_class: ''
+           element_label_type: ''
+@@ -80,13 +86,10 @@ display:
+           element_wrapper_class: ''
+           element_default_classes: true
+           empty: ''
+-          hide_empty: false
+-          empty_zero: false
+           hide_alter_empty: true
+           click_sort_column: value
+-          type: aggregator_title
+-          settings:
+-            display_as_link: false
++          type: user_name
++          settings: {  }
+           group_column: value
+           group_columns: {  }
+           group_rows: true
+@@ -97,17 +100,14 @@ display:
+           multi_type: separator
+           separator: ', '
+           field_api_classes: false
+-          plugin_id: field
+-          entity_type: aggregator_feed
+-          entity_field: title
+-        url:
+-          id: url
+-          table: aggregator_feed
+-          field: url
++        created:
++          id: created
++          table: users_field_data
++          field: created
+           relationship: none
+           group_type: group
+           admin_label: ''
+-          label: URL
++          label: ''
+           exclude: false
+           alter:
+             alter_text: false
+@@ -140,7 +140,7 @@ display:
+           element_class: ''
+           element_label_type: ''
+           element_label_class: ''
+-          element_label_colon: true
++          element_label_colon: false
+           element_wrapper_type: ''
+           element_wrapper_class: ''
+           element_default_classes: true
+@@ -148,18 +148,20 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          display_as_link: false
+-          plugin_id: url
+-          entity_type: aggregator_feed
+-          entity_field: url
+-        description:
+-          id: description
+-          table: aggregator_feed
+-          field: description
++          date_format: long
++          custom_date_format: ''
++          timezone: Africa/Abidjan
++          entity_type: user
++          entity_field: created
++          plugin_id: date
++        created_1:
++          id: created_1
++          table: users_field_data
++          field: created
+           relationship: none
+           group_type: group
+           admin_label: ''
+-          label: Description
++          label: ''
+           exclude: false
+           alter:
+             alter_text: false
+@@ -192,7 +194,7 @@ display:
+           element_class: ''
+           element_label_type: ''
+           element_label_class: ''
+-          element_label_colon: true
++          element_label_colon: false
+           element_wrapper_type: ''
+           element_wrapper_class: ''
+           element_default_classes: true
+@@ -200,17 +202,20 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          plugin_id: xss
+-          entity_type: aggregator_feed
+-          entity_field: description
+-        modified:
+-          id: modified
+-          table: aggregator_feed
+-          field: modified
++          date_format: 'raw time ago'
++          custom_date_format: ''
++          timezone: ''
++          entity_type: user
++          entity_field: created
++          plugin_id: date
++        created_2:
++          id: created_2
++          table: users_field_data
++          field: created
+           relationship: none
+           group_type: group
+           admin_label: ''
+-          label: 'Last modified'
++          label: ''
+           exclude: false
+           alter:
+             alter_text: false
+@@ -243,7 +248,7 @@ display:
+           element_class: ''
+           element_label_type: ''
+           element_label_class: ''
+-          element_label_colon: true
++          element_label_colon: false
+           element_wrapper_type: ''
+           element_wrapper_class: ''
+           element_default_classes: true
+@@ -251,49 +256,39 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: html_date
++          date_format: 'time ago'
+           custom_date_format: ''
+           timezone: ''
++          entity_type: user
++          entity_field: created
+           plugin_id: date
+-          entity_type: aggregator_feed
+-          entity_field: modified
+       filters: {  }
+       sorts: {  }
+-      title: test_style_opml
++      title: 'Update Test'
+       header: {  }
+       footer: {  }
+       empty: {  }
+       relationships: {  }
+       arguments: {  }
+-  feed_1:
+-    display_plugin: feed
+-    id: feed_1
+-    display_title: Feed
+-    position: 2
+-    display_options:
+-      pager:
+-        type: some
+-      style:
+-        type: opml
+-        options:
+-          grouping: {  }
+-      row:
+-        type: opml_fields
+-        options:
+-          type_field: rss
+-          text_field: title
+-          created_field: modified
+-          description_field: description
+-          html_url_field: ''
+-          language_field: ''
+-          xml_url_field: url
+-          url_field: ''
+-      path: test-feed-opml-style
+-      displays: {  }
+-  page:
+-    display_plugin: page
+-    id: page_1
+-    display_title: Page
++      display_extenders: {  }
++    cache_metadata:
++      contexts:
++        - 'languages:language_content'
++        - 'languages:language_interface'
++        - user.permissions
++      cacheable: false
++  block_1:
++    display_plugin: block
++    id: block_1
++    display_title: Block
+     position: 1
+     display_options:
+-      path: test-opml-style
++      display_extenders: {  }
++      allow:
++        items_per_page: false
++    cache_metadata:
++      contexts:
++        - 'languages:language_content'
++        - 'languages:language_interface'
++        - user.permissions
++      cacheable: false
+diff --git a/core/modules/user/config/optional/views.view.user_admin_people.yml b/core/modules/user/config/optional/views.view.user_admin_people.yml
+index 3ae6695..0644e80 100644
+--- a/core/modules/user/config/optional/views.view.user_admin_people.yml
++++ b/core/modules/user/config/optional/views.view.user_admin_people.yml
+@@ -396,10 +396,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: 'raw time ago'
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp_ago
++          settings:
++            future_format: '@interval'
++            past_format: '@interval'
++            granularity: 2
++          plugin_id: field
+           entity_type: user
+           entity_field: created
+         access:
+@@ -450,10 +452,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: 'time ago'
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp_ago
++          settings:
++            future_format: '@interval hence'
++            past_format: '@interval ago'
++            granularity: 2
++          plugin_id: field
+           entity_type: user
+           entity_field: access
+         operations:
+diff --git a/core/modules/user/tests/modules/user_test_views/test_views/views.view.test_user_changed.yml b/core/modules/user/tests/modules/user_test_views/test_views/views.view.test_user_changed.yml
+index 65c9899..5df2ab4 100644
+--- a/core/modules/user/tests/modules/user_test_views/test_views/views.view.test_user_changed.yml
++++ b/core/modules/user/tests/modules/user_test_views/test_views/views.view.test_user_changed.yml
+@@ -38,8 +38,12 @@ display:
+           table: users_field_data
+           field: changed
+           label: 'Updated date'
+-          date_format: html_date
+-          plugin_id: date
++          plugin_id: field
++          type: timestamp
++          settings:
++            date_format: html_date
++            custom_date_format: ''
++            timezone: ''
+           entity_type: user
+           entity_field: changed
+       filters: {  }
+diff --git a/core/modules/views/src/EntityViewsData.php b/core/modules/views/src/EntityViewsData.php
+index 894d1ae..a9bc03e 100644
+--- a/core/modules/views/src/EntityViewsData.php
++++ b/core/modules/views/src/EntityViewsData.php
+@@ -353,7 +353,7 @@ protected function mapSingleFieldViewsData($table, $field_name, $field_type, $co
+       case 'timestamp':
+       case 'created':
+       case 'changed':
+-        $views_field['field']['id'] = 'date';
++        $views_field['field']['id'] = 'field';
+         $views_field['argument']['id'] = 'date';
+         $views_field['filter']['id'] = 'date';
+         $views_field['sort']['id'] = 'date';
+diff --git a/core/modules/views/src/Tests/GlossaryTest.php b/core/modules/views/src/Tests/GlossaryTest.php
+index 72854e9..d5a6aae 100644
+--- a/core/modules/views/src/Tests/GlossaryTest.php
++++ b/core/modules/views/src/Tests/GlossaryTest.php
+@@ -74,6 +74,7 @@ public function testGlossaryView() {
+     $this->assertPageCacheContextsAndTags(
+       $url,
+       [
++        'timezone',
+         'languages:' . LanguageInterface::TYPE_CONTENT,
+         'languages:' . LanguageInterface::TYPE_INTERFACE,
+         'theme',
+diff --git a/core/modules/views/src/Tests/Update/EntityViewsDataUpdateTest.php b/core/modules/views/src/Tests/Update/EntityViewsDataUpdateTest.php
+new file mode 100644
+index 0000000..ba8db1f
+--- /dev/null
++++ b/core/modules/views/src/Tests/Update/EntityViewsDataUpdateTest.php
+@@ -0,0 +1,88 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\views\Tests\Update\EntityViewsDataUpdateTest.
++ */
++
++namespace Drupal\views\Tests\Update;
++
++use Drupal\system\Tests\Update\UpdatePathTestBase;
++use Drupal\views\Views;
++
++/**
++ * Tests the upgrade path for views field plugins.
++ *
++ * @see https://www.drupal.org/node/2455125
++ *
++ * @group Update
++ */
++class EntityViewsDataUpdateTest extends UpdatePathTestBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    $this->databaseDumpFiles = [
++      __DIR__ . '/../../../../system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
++      __DIR__ . '/../../../../system/tests/fixtures/update/drupal-8.views-entity-views-data-2455125.php',
++    ];
++
++    parent::setUp();
++  }
++
++  /**
++   * Tests that field plugins are updated properly.
++   */
++  public function testUpdateHookN() {
++    $this->runUpdates();
++
++    // Load and initialize our test view.
++    $view = Views::getView('update_test');
++    $view->initHandlers();
++
++    // Extract the fields from the test view that were updated.
++    /** @var \Drupal\views\Plugin\views\field\Field $field */
++    $created = $view->field['created'];
++    /** @var \Drupal\views\Plugin\views\field\Field $field */
++    $created_1 = $view->field['created_1'];
++    /** @var \Drupal\views\Plugin\views\field\Field $field */
++    $created_2 = $view->field['created_2'];
++
++    // Make sure the plugins were converted from date to field.
++    $this->assertEqual($created->getPluginId(), 'field', 'created has correct plugin_id');
++    $this->assertEqual($created_1->getPluginId(), 'field', 'created has correct plugin_id');
++    $this->assertEqual($created_2->getPluginId(), 'field', 'created has correct plugin_id');
++
++    // Check options on 'created'.
++    $options = $created->options;
++    $this->assertEqual($options['type'], 'timestamp');
++    $this->assertFalse(array_key_exists('date_format', $options));
++    $this->assertFalse(array_key_exists('custom_date_format', $options));
++    $this->assertFalse(array_key_exists('timezone', $options));
++    $this->assertEqual($options['settings']['date_format'], 'long');
++    $this->assertEqual($options['settings']['custom_date_format'], '');
++    $this->assertEqual($options['settings']['timezone'], 'Africa/Abidjan');
++
++    // Check options on 'created'.
++    $options = $created_1->options;
++    $this->assertEqual($options['type'], 'timestamp_ago');
++    $this->assertFalse(array_key_exists('date_format', $options));
++    $this->assertFalse(array_key_exists('custom_date_format', $options));
++    $this->assertFalse(array_key_exists('timezone', $options));
++    $this->assertEqual($options['settings']['future_format'], '@interval');
++    $this->assertEqual($options['settings']['past_format'], '@interval');
++    $this->assertEqual($options['settings']['granularity'], 2);
++
++    // Check options on 'created'.
++    $options = $created_2->options;
++    $this->assertEqual($options['type'], 'timestamp_ago');
++    $this->assertFalse(array_key_exists('date_format', $options));
++    $this->assertFalse(array_key_exists('custom_date_format', $options));
++    $this->assertFalse(array_key_exists('timezone', $options));
++    $this->assertEqual($options['settings']['future_format'], '@interval hence');
++    $this->assertEqual($options['settings']['past_format'], '@interval ago');
++    $this->assertEqual($options['settings']['granularity'], 2);
++  }
++
++}
+diff --git a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_click_sort.yml b/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_click_sort.yml
+index f5ada7a..19f6a8e 100644
+--- a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_click_sort.yml
++++ b/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_click_sort.yml
+@@ -29,7 +29,12 @@ display:
+           table: views_test_data
+           field: created
+           label: created
+-          plugin_id: date
++          plugin_id: field
++          type: timestamp
++          settings:
++            date_format: medium
++            custom_date_format: ''
++            timezone: ''
+       access:
+         type: none
+       cache:
+diff --git a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_destroy.yml b/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_destroy.yml
+index bf0df9a..3350996 100644
+--- a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_destroy.yml
++++ b/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_destroy.yml
+@@ -62,7 +62,12 @@ display:
+           field: created
+           id: created
+           table: node_field_data
+-          plugin_id: date
++          plugin_id: field
++          type: timestamp
++          settings:
++            date_format: medium
++            custom_date_format: ''
++            timezone: ''
+           entity_type: node
+           entity_field: created
+         nid:
+diff --git a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml b/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml
+index 2764a8f..1342c70 100644
+--- a/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml
++++ b/core/modules/views/tests/modules/views_test_config/test_views/views.view.test_style_opml.yml
+@@ -251,10 +251,12 @@ display:
+           hide_empty: false
+           empty_zero: false
+           hide_alter_empty: true
+-          date_format: html_date
+-          custom_date_format: ''
+-          timezone: ''
+-          plugin_id: date
++          type: timestamp
++          settings:
++            date_format: html_date
++            custom_date_format: ''
++            timezone: ''
++          plugin_id: field
+           entity_type: aggregator_feed
+           entity_field: modified
+       filters: {  }
+diff --git a/core/modules/views/views.install b/core/modules/views/views.install
+index e8e3e5e..5615747 100644
+--- a/core/modules/views/views.install
++++ b/core/modules/views/views.install
+@@ -11,3 +11,111 @@
+ function views_install() {
+   module_set_weight('views', 10);
+ }
++
++/**
++ * @addtogroup updates-8.0.0-beta
++ * @{
++ */
++
++/**
++ * Update views field plugins.
++ */
++function views_update_8001(&$sandbox) {
++  $config_factory = \Drupal::configFactory();
++  $ids = [];
++  $message = NULL;
++  $ago_formats = [
++    'time ago',
++    'time hence',
++    'time span',
++    'raw time ago',
++    'raw time hence',
++    'raw time span',
++    'inverse time span',
++  ];
++
++  foreach ($config_factory->listAll('views.view.') as $view_config_name) {
++    $view = $config_factory->getEditable($view_config_name);
++
++    $displays = $view->get('display');
++
++    foreach ($displays as $display_name => $display) {
++      if (!empty($display['display_options']['fields'])) {
++        foreach ($display['display_options']['fields'] as $field_name => $field) {
++          if (isset($field['entity_type']) && $field['plugin_id'] === 'date') {
++            $ids[] = $view->get('id');
++
++            // Grab the settings we need to move to a different place in the
++            // config schema.
++            $date_format = !empty($field['date_format']) ? $field['date_format'] : 'medium';
++            $custom_date_format = !empty($field['custom_date_format']) ? $field['custom_date_format'] : '';
++            $timezone = !empty($field['timezone']) ? $field['timezone'] : '';
++
++            // Save off the base part of the config path we are updating.
++            $base = "display.$display_name.display_options.fields.$field_name";
++
++            if (in_array($date_format, $ago_formats)) {
++              // Update the field to use the Field API formatter.
++              $view->set($base . '.plugin_id', 'field');
++              $view->set($base . '.type', 'timestamp_ago');
++
++              // Ensure the granularity is an integer, which is defined in the
++              // field.formatter.settings.timestamp_ago schema.
++              $granularity = is_numeric($custom_date_format) ? (int) $custom_date_format : 2;
++
++              // Add the new settings.
++              if ($date_format === 'time ago' || $date_format === 'time hence' || $date_format === 'time span') {
++                $view->set($base . '.settings.future_format', '@interval hence');
++                $view->set($base . '.settings.past_format', '@interval ago');
++                $view->set($base . '.settings.granularity', $granularity);
++              }
++              elseif ($date_format === 'raw time ago' || $date_format === 'raw time hence') {
++                $view->set($base . '.settings.future_format', '@interval');
++                $view->set($base . '.settings.past_format', '@interval');
++                $view->set($base . '.settings.granularity', $granularity);
++              }
++              elseif ($date_format === 'raw time span') {
++                $view->set($base . '.settings.future_format', '@interval');
++                $view->set($base . '.settings.past_format', '-@interval');
++                $view->set($base . '.settings.granularity', $granularity);
++              }
++              elseif ($date_format === 'inverse time span') {
++                $view->set($base . '.settings.future_format', '-@interval');
++                $view->set($base . '.settings.past_format', '@interval');
++                $view->set($base . '.settings.granularity', $granularity);
++              }
++            }
++            else {
++              // Update the field to use the Field API formatter.
++              $view->set($base . '.plugin_id', 'field');
++              $view->set($base . '.type', 'timestamp');
++
++              // Add the new settings, and make sure everything is a string
++              // to conform with the field.formatter.settings.timestamp schema.
++              $view->set($base . '.settings.date_format', (string) $date_format);
++              $view->set($base . '.settings.custom_date_format', (string) $custom_date_format);
++              $view->set($base . '.settings.timezone', (string) $timezone);
++            }
++
++            // Remove the old settings.
++            $view->clear($base . '.date_format');
++            $view->clear($base . '.custom_date_format');
++            $view->clear($base . '.timezone');
++          }
++        }
++      }
++    }
++
++    $view->save(TRUE);
++  }
++
++  if (!empty($ids)) {
++    $message = \Drupal::translation()->translate('Updated field plugins for views: @ids', ['@ids' => implode(', ', array_unique($ids))]);
++  }
++
++  return $message;
++}
++
++/**
++ * @} End of "addtogroup updates-8.0.0-beta".
++ */

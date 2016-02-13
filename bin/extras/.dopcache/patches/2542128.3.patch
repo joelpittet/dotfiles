@@ -1,0 +1,20 @@
+diff --git a/core/modules/node/tests/modules/node_test_views/test_views/views.view.test_node_revision_nid.yml b/core/modules/node/tests/modules/node_test_views/test_views/views.view.test_node_revision_nid.yml
+index 7c2e7fe..179e140 100644
+--- a/core/modules/node/tests/modules/node_test_views/test_views/views.view.test_node_revision_nid.yml
++++ b/core/modules/node/tests/modules/node_test_views/test_views/views.view.test_node_revision_nid.yml
+@@ -52,6 +52,15 @@ display:
+           plugin_id: node_nid
+           entity_type: node
+           entity_field: nid
++      sorts:
++        vid:
++          id: vid
++          table: node_field_revision
++          field: vid
++          order: ASC
++          plugin_id: field
++          entity_type: node
++          entity_field: vid
+     display_plugin: default
+     display_title: Master
+     id: default

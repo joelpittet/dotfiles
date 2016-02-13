@@ -1,0 +1,13 @@
+diff --git a/core/lib/Drupal/Core/Field/Plugin/Field/FieldFormatter/NumericFormatterBase.php b/core/lib/Drupal/Core/Field/Plugin/Field/FieldFormatter/NumericFormatterBase.php
+index c30a9d2..1e7321a 100644
+--- a/core/lib/Drupal/Core/Field/Plugin/Field/FieldFormatter/NumericFormatterBase.php
++++ b/core/lib/Drupal/Core/Field/Plugin/Field/FieldFormatter/NumericFormatterBase.php
+@@ -83,7 +83,7 @@ public function viewElements(FieldItemListInterface $items) {
+       }
+       // Output the raw value in a content attribute if the text of the HTML
+       // element differs from the raw value (for example when a prefix is used).
+-      if (!empty($item->_attributes) && $item->value != $output) {
++      if (isset($item->_attributes) && $item->value != $output) {
+         $item->_attributes += array('content' => $item->value);
+       }
+ 

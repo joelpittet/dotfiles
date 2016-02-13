@@ -1,0 +1,50 @@
+diff --git a/core/modules/migrate/src/Plugin/migrate/source/SourcePluginBase.php b/core/modules/migrate/src/Plugin/migrate/source/SourcePluginBase.php
+index 2ebcbba..51cdcda 100644
+--- a/core/modules/migrate/src/Plugin/migrate/source/SourcePluginBase.php
++++ b/core/modules/migrate/src/Plugin/migrate/source/SourcePluginBase.php
+@@ -423,7 +423,7 @@ public function count($refresh = FALSE) {
+     // class to get the count from the source.
+     if ($refresh || !$this->cacheCounts) {
+       $count = $this->getIterator()->count();
+-      $this->getCache()->set($this->cacheKey, $count, 'cache');
++      $this->getCache()->set($this->cacheKey, $count);
+     }
+     else {
+       // Caching is in play, first try to retrieve a cached count.
+@@ -436,7 +436,7 @@ public function count($refresh = FALSE) {
+         // No cached count, ask the derived class to count 'em up, and cache
+         // the result.
+         $count = $this->getIterator()->count();
+-        $this->getCache()->set($this->cacheKey, $count, 'cache');
++        $this->getCache()->set($this->cacheKey, $count);
+       }
+     }
+     return $count;
+diff --git a/core/modules/migrate/tests/src/Unit/MigrateSourceTest.php b/core/modules/migrate/tests/src/Unit/MigrateSourceTest.php
+index d6e726a..90c4a75 100644
+--- a/core/modules/migrate/tests/src/Unit/MigrateSourceTest.php
++++ b/core/modules/migrate/tests/src/Unit/MigrateSourceTest.php
+@@ -7,6 +7,7 @@
+ 
+ namespace Drupal\Tests\migrate\Unit;
+ 
++use Drupal\Core\Cache\CacheBackendInterface;
+ use Drupal\Core\DependencyInjection\ContainerBuilder;
+ use Drupal\migrate\MigrateExecutable;
+ use Drupal\migrate\Plugin\MigrateIdMapInterface;
+@@ -139,10 +140,12 @@ public function testHighwaterTrackChangesIncompatible() {
+    * Test that the source count is correct.
+    */
+   public function testCount() {
+-
++    // Mock the cache to validate set() receives appropriate arguments.
+     $container = new ContainerBuilder();
+-    $container->register('cache.migrate', 'Drupal\Core\Cache\NullBackend')
+-      ->setArguments(['migrate']);
++    $cache = $this->getMock(CacheBackendInterface::class);
++    $cache->expects($this->any())->method('set')
++        ->with($this->isType('string'), $this->isType('int'), $this->isType('int'));
++    $container->set('cache.migrate', $cache);
+     \Drupal::setContainer($container);
+ 
+     // Test that the basic count works.

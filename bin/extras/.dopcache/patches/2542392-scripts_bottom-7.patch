@@ -1,0 +1,32 @@
+diff --git a/core/modules/system/templates/html.html.twig b/core/modules/system/templates/html.html.twig
+index 50fa76f..b807609 100644
+--- a/core/modules/system/templates/html.html.twig
++++ b/core/modules/system/templates/html.html.twig
+@@ -20,8 +20,10 @@
+  * - page_bottom: Closing rendered markup. This variable should be printed after
+  *   'page'.
+  * - styles: Style tags necessary to import all necessary CSS files in the head.
+- * - scripts: Script tags necessary to load the JavaScript files and settings
++ * - scripts: Script tags necessary to load JavaScript files and settings
+  *   in the head.
++ * - scripts_bottom: Script tags necessary to load JavaScript files before the
++ *   closing BODY tag.
+  * - db_offline: A flag indicating if the database is offline.
+  *
+  * @see template_preprocess_html()
+diff --git a/core/themes/classy/templates/layout/html.html.twig b/core/themes/classy/templates/layout/html.html.twig
+index 34c8c56..18e01b3 100644
+--- a/core/themes/classy/templates/layout/html.html.twig
++++ b/core/themes/classy/templates/layout/html.html.twig
+@@ -20,8 +20,10 @@
+  * - page_bottom: Closing rendered markup. This variable should be printed after
+  *   'page'.
+  * - styles: Style tags necessary to import all necessary CSS files in the head.
+- * - scripts: Script tags necessary to load the JavaScript files and settings
++ * - scripts: Script tags necessary to load JavaScript files and settings
+  *   in the head.
++ * - scripts_bottom: Script tags necessary to load JavaScript files before the
++ *   closing BODY tag.
+  * - db_offline: A flag indicating if the database is offline.
+  *
+  * @see template_preprocess_html()

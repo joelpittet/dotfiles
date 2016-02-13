@@ -1,0 +1,146 @@
+diff --git a/core/lib/Drupal/Core/DrupalKernel.php b/core/lib/Drupal/Core/DrupalKernel.php
+index 61c5863..ba0dc7b 100644
+--- a/core/lib/Drupal/Core/DrupalKernel.php
++++ b/core/lib/Drupal/Core/DrupalKernel.php
+@@ -602,6 +602,9 @@ public function handle(Request $request, $type = self::MASTER_REQUEST, $catch =
+    *
+    * @return Response
+    *   A Response instance
++   *
++   * @throws \Exception
++   *   If the passed in exception cannot be turned into a response.
+    */
+   protected function handleException(\Exception $e, $request, $type) {
+     if ($e instanceof HttpExceptionInterface) {
+@@ -610,24 +613,7 @@ protected function handleException(\Exception $e, $request, $type) {
+       return $response;
+     }
+     else {
+-      // @todo: _drupal_log_error() and thus _drupal_exception_handler() prints
+-      // the message directly. Extract a function which generates and returns it
+-      // instead, then remove the output buffer hack here.
+-      ob_start();
+-      try {
+-        // @todo: The exception handler prints the message directly. Extract a
+-        // function which returns the message instead.
+-        _drupal_exception_handler($e);
+-      }
+-      catch (\Exception $e) {
+-        $message = Settings::get('rebuild_message', 'If you have just changed code (for example deployed a new module or moved an existing one) read <a href="https://www.drupal.org/documentation/rebuild">https://www.drupal.org/documentation/rebuild</a>');
+-        if ($message && Settings::get('rebuild_access', FALSE)) {
+-          $rebuild_path = $GLOBALS['base_url'] . '/rebuild.php';
+-          $message .= " or run the <a href=\"$rebuild_path\">rebuild script</a>";
+-        }
+-        print $message;
+-      }
+-      return new Response(ob_get_clean(), 500);
++      throw $e;
+     }
+   }
+ 
+diff --git a/core/modules/system/src/Tests/System/UncaughtExceptionTest.php b/core/modules/system/src/Tests/System/UncaughtExceptionTest.php
+index 14b8bca..f9dace1 100644
+--- a/core/modules/system/src/Tests/System/UncaughtExceptionTest.php
++++ b/core/modules/system/src/Tests/System/UncaughtExceptionTest.php
+@@ -90,17 +90,77 @@ public function testUncaughtException() {
+   }
+ 
+   /**
++   * Tests uncaught exception handling with custom exception handler.
++   */
++  public function testUncaughtExceptionCustomExceptionHandler() {
++    $settings_filename = $this->siteDirectory . '/settings.php';
++    chmod($settings_filename, 0777);
++    $settings_php = file_get_contents($settings_filename);
++    $settings_php .= "\n";
++    $settings_php .= "set_exception_handler(function() {\n";
++    $settings_php .= "  header('HTTP/1.1 418 I\'m a teapot');\n";
++    $settings_php .= "  print('Oh oh, flying teapots');\n";
++    $settings_php .= "});\n";
++    file_put_contents($settings_filename, $settings_php);
++
++    \Drupal::state()->set('error_service_test.break_bare_html_renderer', TRUE);
++
++    $this->drupalGet('');
++    $this->assertResponse(418);
++    $this->assertNoText('The website encountered an unexpected error. Please try again later.');
++    $this->assertNoText('Oh oh, bananas in the instruments');
++    $this->assertText('Oh oh, flying teapots');
++  }
++
++  /**
+    * Tests a missing dependency on a service.
+    */
+   public function testMissingDependency() {
+     $this->expectedExceptionMessage = 'Argument 1 passed to Drupal\error_service_test\LonelyMonkeyClass::__construct() must be an instance of Drupal\Core\Database\Connection, non';
+     $this->drupalGet('broken-service-class');
++    $this->assertResponse(500);
+ 
+     $this->assertRaw('The website encountered an unexpected error.');
+     $this->assertRaw($this->expectedExceptionMessage);
+   }
+ 
+   /**
++   * Tests a missing dependency on a service with a custom error handler.
++   */
++  public function testMissingDependencyCustomErrorHandler() {
++    $settings_filename = $this->siteDirectory . '/settings.php';
++    chmod($settings_filename, 0777);
++    $settings_php = file_get_contents($settings_filename);
++    $settings_php .= "\n";
++    $settings_php .= "set_error_handler(function() {\n";
++    $settings_php .= "  header('HTTP/1.1 418 I\'m a teapot');\n";
++    $settings_php .= "  print('Oh oh, flying teapots');\n";
++    $settings_php .= "  exit();\n";
++    $settings_php .= "});\n";
++    file_put_contents($settings_filename, $settings_php);
++
++    $this->drupalGet('broken-service-class');
++    $this->assertResponse(418);
++    $this->assertRaw('Oh oh, flying teapots');
++
++    $message = 'Argument 1 passed to Drupal\error_service_test\LonelyMonkeyClass::__construct() must be an instance of Drupal\Core\Database\Connection, non';
++
++    $this->assertNoRaw('The website encountered an unexpected error.');
++    $this->assertNoRaw($message);
++
++    $found_exception = FALSE;
++    foreach ($this->assertions as &$assertion) {
++      if (strpos($assertion['message'], $message) !== FALSE) {
++        $found_exception = TRUE;
++        $this->deleteAssert($assertion['message_id']);
++        unset($assertion);
++      }
++    }
++
++    $this->assertTrue($found_exception, 'Ensure that the exception of a missing constructor argument was triggered.');
++  }
++
++  /**
+    * Tests a container which has an error.
+    */
+   public function testErrorContainer() {
+@@ -121,6 +181,7 @@ public function testErrorContainer() {
+ 
+     $this->expectedExceptionMessage = 'Argument 1 passed to Drupal\system\Tests\Bootstrap\ErrorContainer::Drupal\system\Tests\Bootstrap\{closur';
+     $this->drupalGet('');
++    $this->assertResponse(500);
+ 
+     $this->assertRaw($this->expectedExceptionMessage);
+   }
+@@ -146,6 +207,7 @@ public function testExceptionContainer() {
+ 
+     $this->expectedExceptionMessage = 'Thrown exception during Container::get';
+     $this->drupalGet('');
++    $this->assertResponse(500);
+ 
+ 
+     $this->assertRaw('The website encountered an unexpected error');
+@@ -182,6 +244,7 @@ public function testLostDatabaseConnection() {
+     $this->writeSettings($settings);
+ 
+     $this->drupalGet('');
++    $this->assertResponse(500);
+     $this->assertRaw('PDOException');
+   }
+ 

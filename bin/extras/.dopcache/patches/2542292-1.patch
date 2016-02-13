@@ -1,0 +1,35 @@
+diff --git a/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItem.php b/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItem.php
+index fa0b4a0..14ea5a6 100644
+--- a/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItem.php
++++ b/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItem.php
+@@ -13,6 +13,7 @@
+ use Drupal\Core\Field\FieldDefinitionInterface;
+ use Drupal\Core\Field\FieldItemBase;
+ use Drupal\Core\Field\FieldStorageDefinitionInterface;
++use Drupal\Core\StringTranslation\TranslationWrapper;
+ use Drupal\Core\TypedData\DataDefinition;
+ use Drupal\Core\TypedData\DataReferenceDefinition;
+ 
+@@ -82,19 +83,19 @@ public static function propertyDefinitions(FieldStorageDefinitionInterface $fiel
+ 
+     if ($target_id_data_type === 'integer') {
+       $target_id_definition = DataDefinition::create('integer')
+-        ->setLabel(t('@label ID', array($target_type_info->getLabel())))
++        ->setLabel(new TranslationWrapper('@label ID', array($target_type_info->getLabel())))
+         ->setSetting('unsigned', TRUE);
+     }
+     else {
+       $target_id_definition = DataDefinition::create('string')
+-        ->setLabel(t('@label ID', array($target_type_info->getLabel())));
++        ->setLabel(new TranslationWrapper('@label ID', array($target_type_info->getLabel())));
+     }
+     $target_id_definition->setRequired(TRUE);
+     $properties['target_id'] = $target_id_definition;
+ 
+     $properties['entity'] = DataReferenceDefinition::create('entity')
+       ->setLabel($target_type_info->getLabel())
+-      ->setDescription(t('The referenced entity'))
++      ->setDescription(new TranslationWrapper('The referenced entity'))
+       // The entity object is computed out of the entity ID.
+       ->setComputed(TRUE)
+       ->setReadOnly(FALSE)

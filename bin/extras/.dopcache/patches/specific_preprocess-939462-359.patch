@@ -1,0 +1,560 @@
+diff --git a/core/includes/theme.inc b/core/includes/theme.inc
+index 8c60084..3459249 100644
+--- a/core/includes/theme.inc
++++ b/core/includes/theme.inc
+@@ -115,7 +115,7 @@ function drupal_theme_rebuild() {
+  */
+ function drupal_find_theme_functions($cache, $prefixes) {
+   $implementations = [];
+-  $grouped_functions = drupal_group_functions_by_prefix();
++  $grouped_functions = \Drupal::service('theme.registry')->getPrefixGroupedUserFunctions();
+ 
+   foreach ($cache as $hook => $info) {
+     foreach ($prefixes as $prefix) {
+@@ -162,25 +162,6 @@ function drupal_find_theme_functions($cache, $prefixes) {
+ }
+ 
+ /**
+- * Group all user functions by word before first underscore.
+- *
+- * @return array
+- *   Functions grouped by the first prefix.
+- */
+-function drupal_group_functions_by_prefix() {
+-  $functions = get_defined_functions();
+-
+-  $grouped_functions = [];
+-  // Splitting user defined functions into groups by the first prefix.
+-  foreach ($functions['user'] as $function) {
+-    list($first_prefix,) = explode('_', $function, 2);
+-    $grouped_functions[$first_prefix][] = $function;
+-  }
+-
+-  return $grouped_functions;
+-}
+-
+-/**
+  * Allows themes and/or theme engines to easily discover overridden templates.
+  *
+  * @param $cache
+diff --git a/core/lib/Drupal/Core/Render/theme.api.php b/core/lib/Drupal/Core/Render/theme.api.php
+index 689dce0..e2b7624 100644
+--- a/core/lib/Drupal/Core/Render/theme.api.php
++++ b/core/lib/Drupal/Core/Render/theme.api.php
+@@ -99,10 +99,12 @@
+  * before the template file is invoked to modify the variables that are passed
+  * to the template. These make up the "preprocessing" phase, and are executed
+  * (if they exist), in the following order (note that in the following list,
+- * HOOK indicates the theme hook name, MODULE indicates a module name, THEME
+- * indicates a theme name, and ENGINE indicates a theme engine name). Modules,
+- * themes, and theme engines can provide these functions to modify how the
+- * data is preprocessed, before it is passed to the theme template:
++ * HOOK indicates the hook being called or a less specific hook. For example, if
++ * '#theme' => 'node__article' is called, hook is node__article and node. MODULE
++ * indicates a module name, THEME indicates a theme name, and ENGINE indicates a
++ * theme engine name). Modules, themes, and theme engines can provide these
++ * functions to modify how the data is preprocessed, before it is passed to the
++ * theme template:
+  * - template_preprocess(&$variables, $hook): Creates a default set of variables
+  *   for all theme hooks with template implementations. Provided by Drupal Core.
+  * - template_preprocess_HOOK(&$variables): Should be implemented by the module
+diff --git a/core/lib/Drupal/Core/Theme/Registry.php b/core/lib/Drupal/Core/Theme/Registry.php
+index bb89707..8902daa 100644
+--- a/core/lib/Drupal/Core/Theme/Registry.php
++++ b/core/lib/Drupal/Core/Theme/Registry.php
+@@ -342,9 +342,12 @@ protected function build() {
+       $this->processExtension($cache, $this->theme->getEngine(), 'theme_engine', $this->theme->getName(), $this->theme->getPath());
+     }
+ 
+-    // Finally, hooks provided by the theme itself.
++    // Hooks provided by the theme itself.
+     $this->processExtension($cache, $this->theme->getName(), 'theme', $this->theme->getName(), $this->theme->getPath());
+ 
++    // Discover and add all preprocess functions for theme hook suggestions.
++    $this->postProcessExtension($cache, $this->theme);
++
+     // Let modules and themes alter the registry.
+     $this->moduleHandler->alter('theme_registry', $cache);
+     $this->themeManager->alterForTheme($this->theme, 'theme_registry', $cache);
+@@ -420,7 +423,7 @@ protected function processExtension(array &$cache, $name, $type, $theme, $path)
+       'base hook' => TRUE,
+     );
+ 
+-    $module_list = array_keys((array) $this->moduleHandler->getModuleList());
++    $module_list = array_keys($this->moduleHandler->getModuleList());
+ 
+     // Invoke the hook_theme() implementation, preprocess what is returned, and
+     // merge it into $cache.
+@@ -438,6 +441,12 @@ protected function processExtension(array &$cache, $name, $type, $theme, $path)
+         $result[$hook]['type'] = $type;
+         $result[$hook]['theme path'] = $path;
+ 
++        // If a theme hook has a base hook, mark its preprocess functions always
++        // incomplete in order to inherit the base hook's preprocess functions.
++        if (!empty($result[$hook]['base hook'])) {
++          $result[$hook]['incomplete preprocess functions'] = TRUE;
++        }
++
+         if (isset($cache[$hook]['includes'])) {
+           $result[$hook]['includes'] = $cache[$hook]['includes'];
+         }
+@@ -556,14 +565,142 @@ protected function processExtension(array &$cache, $name, $type, $theme, $path)
+             $cache[$hook]['preprocess functions'][] = $name . '_preprocess_' . $hook;
+             $cache[$hook]['theme path'] = $path;
+           }
+-          // Ensure uniqueness.
+-          $cache[$hook]['preprocess functions'] = array_unique($cache[$hook]['preprocess functions']);
+         }
+       }
+     }
+   }
+ 
+   /**
++   * Completes the definition of the requested suggestion hook.
++   *
++   * @param string $hook
++   *   The name of the suggestion hook to complete.
++   * @param array $cache
++   *   The theme registry, as documented in
++   *   \Drupal\Core\Theme\Registry::processExtension().
++   */
++  protected function completeSuggestion($hook, array &$cache) {
++    $previous_hook = $hook;
++    $incomplete_previous_hook = array();
++    while ((!isset($cache[$previous_hook]) || isset($cache[$previous_hook]['incomplete preprocess functions']))
++      && $pos = strrpos($previous_hook, '__')) {
++      if (isset($cache[$previous_hook]) && !$incomplete_previous_hook && isset($cache[$previous_hook]['incomplete preprocess functions'])) {
++        $incomplete_previous_hook = $cache[$previous_hook];
++        unset($incomplete_previous_hook['incomplete preprocess functions']);
++      }
++      $previous_hook = substr($previous_hook, 0, $pos);
++
++      // If base hook exists clone of it for the preprocess function
++      // without a template.
++      // @see https://www.drupal.org/node/2457295
++      if (isset($cache[$previous_hook]) && !isset($cache[$previous_hook]['incomplete preprocess functions'])) {
++        $cache[$hook] = $incomplete_previous_hook + $cache[$previous_hook];
++        if (isset($incomplete_previous_hook['preprocess functions'])) {
++          $diff = array_diff($incomplete_previous_hook['preprocess functions'], $cache[$previous_hook]['preprocess functions']);
++          $cache[$hook]['preprocess functions'] = array_merge($cache[$previous_hook]['preprocess functions'], $diff);
++        }
++        // If a base hook isn't set, this is the actual base hook.
++        if (!isset($cache[$previous_hook]['base hook'])) {
++          $cache[$hook]['base hook'] = $previous_hook;
++        }
++      }
++    }
++  }
++
++  /**
++   * Completes the theme registry adding discovered functions and hooks.
++   *
++   * @param array $cache
++   *   The theme registry as documented in
++   *   \Drupal\Core\Theme\Registry::processExtension().
++   * @param \Drupal\Core\Theme\ActiveTheme $theme
++   *   Current active theme.
++   *
++   * @see ::processExtension()
++   */
++  protected function postProcessExtension(array &$cache, ActiveTheme $theme) {
++    $grouped_functions = $this->getPrefixGroupedUserFunctions();
++
++    // Gather prefixes. This will be used to limit the found functions to the
++    // expected naming conventions.
++    $prefixes = array_keys((array) $this->moduleHandler->getModuleList());
++    foreach (array_reverse($theme->getBaseThemes()) as $base) {
++      $prefixes[] = $base->getName();
++    }
++    if ($theme->getEngine()) {
++      $prefixes[] = $theme->getEngine() . '_engine';
++    }
++    $prefixes[] = $theme->getName();
++
++    // Collect all variable preprocess functions in the correct order.
++    $suggestion_level = [];
++    $matches = [];
++    // Look for functions named according to the pattern and add them if they
++    // have matching hooks in the registry.
++    foreach ($prefixes as $prefix) {
++      // Grep only the functions which are within the prefix group.
++      list($first_prefix,) = explode('_', $prefix, 2);
++      if (!isset($grouped_functions[$first_prefix])) {
++        continue;
++      }
++      // Add the function and the name of the associated theme hook to the list
++      // of preprocess functions grouped by suggestion specificity if a matching
++      // base hook is found.
++      foreach ($grouped_functions[$first_prefix] as $candidate) {
++        if (preg_match("/^{$prefix}_preprocess_(((?:[^_]++|_(?!_))+)__.*)/", $candidate, $matches)) {
++          if (isset($cache[$matches[2]])) {
++            $level = substr_count($matches[1], '__');
++            $suggestion_level[$level][$candidate] = $matches[1];
++          }
++        }
++      }
++    }
++
++    // Add missing variable preprocessors. This is needed for modules that do
++    // not explicitly register the hook. For example, when a theme contains a
++    // variable preprocess function but it does not implement a template, it
++    // will go missing. This will add the expected function. It also allows
++    // modules or themes to have a variable process function based on a pattern
++    // even if the hook does not exist.
++    for ($level = 1; $level <= count($suggestion_level); $level++) {
++      foreach ($suggestion_level[$level] as $preprocessor => $hook) {
++        if (isset($cache[$hook]['preprocess functions']) && !in_array($hook, $cache[$hook]['preprocess functions'])) {
++          // Add missing preprocessor to existing hook.
++          $cache[$hook]['preprocess functions'][] = $preprocessor;
++        }
++        elseif (!isset($cache[$hook]) && strpos($hook, '__')) {
++          // Process non-existing hook and register it.
++          // Look for a previously defined hook that is either a less specific
++          // suggestion hook or the base hook.
++          $this->completeSuggestion($hook, $cache);
++          $cache[$hook]['preprocess functions'][] = $preprocessor;
++        }
++      }
++    }
++    // Inherit all base hook variable preprocess functions into suggestion
++    // hooks. This ensures that derivative hooks have a complete set of variable
++    // preprocess functions.
++    foreach ($cache as $hook => $info) {
++      // The 'base hook' is only applied to derivative hooks already registered
++      // from a pattern. This is typically set from
++      // drupal_find_theme_functions() and drupal_find_theme_templates().
++      if (isset($info['incomplete preprocess functions'])) {
++        $this->completeSuggestion($hook, $cache);
++        unset($cache[$hook]['incomplete preprocess functions']);
++      }
++
++      // Optimize the registry.
++      if (isset($cache[$hook]['preprocess functions']) && empty($cache[$hook]['preprocess functions'])) {
++        unset($cache[$hook]['preprocess functions']);
++      }
++      // Ensure uniqueness.
++      if (isset($cache[$hook]['preprocess functions'])) {
++        $cache[$hook]['preprocess functions'] = array_unique($cache[$hook]['preprocess functions']);
++      }
++    }
++  }
++
++  /**
+    * Invalidates theme registry caches.
+    *
+    * To be called when the list of enabled extensions is changed.
+@@ -590,6 +727,25 @@ public function destruct() {
+   }
+ 
+   /**
++   * Gets all user functions grouped by the word before the first underscore.
++   *
++   * @return array
++   *   Functions grouped by the first prefix.
++   */
++  public function getPrefixGroupedUserFunctions() {
++    $functions = get_defined_functions();
++
++    $grouped_functions = [];
++    // Splitting user defined functions into groups by the first prefix.
++    foreach ($functions['user'] as $function) {
++      list($first_prefix,) = explode('_', $function, 2);
++      $grouped_functions[$first_prefix][] = $function;
++    }
++
++    return $grouped_functions;
++  }
++
++  /**
+    * Wraps drupal_get_path().
+    *
+    * @param string $module
+diff --git a/core/lib/Drupal/Core/Theme/ThemeManager.php b/core/lib/Drupal/Core/Theme/ThemeManager.php
+index 31c10a7..5a2af2e 100644
+--- a/core/lib/Drupal/Core/Theme/ThemeManager.php
++++ b/core/lib/Drupal/Core/Theme/ThemeManager.php
+@@ -279,12 +279,10 @@ public function render($hook, array $variables) {
+           include_once $this->root . '/' . $include_file;
+         }
+       }
+-      // Replace the preprocess functions with those from the base hook.
+       if (isset($base_hook_info['preprocess functions'])) {
+         // Set a variable for the 'theme_hook_suggestion'. This is used to
+         // maintain backwards compatibility with template engines.
+         $theme_hook_suggestion = $hook;
+-        $info['preprocess functions'] = $base_hook_info['preprocess functions'];
+       }
+     }
+     if (isset($info['preprocess functions'])) {
+diff --git a/core/modules/system/src/Tests/Theme/RegistryTest.php b/core/modules/system/src/Tests/Theme/RegistryTest.php
+index 8a72ecc..e6c80be 100644
+--- a/core/modules/system/src/Tests/Theme/RegistryTest.php
++++ b/core/modules/system/src/Tests/Theme/RegistryTest.php
+@@ -99,6 +99,46 @@ public function testMultipleSubThemes() {
+       'template_preprocess',
+       'test_basetheme_preprocess_theme_test_template_test',
+     ], $preprocess_functions);
++
++  }
++
++  /**
++   * Tests the theme registry with suggestions.
++   */
++  public function testSuggestionPreprocessFunctions() {
++    $theme_handler = \Drupal::service('theme_handler');
++    $theme_handler->install(['test_theme']);
++
++    $registry_theme = new Registry(\Drupal::root(), \Drupal::cache(), \Drupal::lock(), \Drupal::moduleHandler(), $theme_handler, \Drupal::service('theme.initialization'), 'test_theme');
++    $registry_theme->setThemeManager(\Drupal::theme());
++
++    $suggestions = ['__kitten', '__flamingo'];
++    $expected_preprocess_functions = [
++      'template_preprocess',
++      'theme_test_preprocess_theme_test_preprocess_suggestions',
++    ];
++    $suggestion = '';
++    $hook = 'theme_test_preprocess_suggestions';
++    do {
++      $hook .= "$suggestion";
++      $expected_preprocess_functions[] = "test_theme_preprocess_$hook";
++      $preprocess_functions = $registry_theme->get()[$hook]['preprocess functions'];
++      $this->assertIdentical($expected_preprocess_functions, $preprocess_functions, "$hook has correct preprocess functions.");
++    } while ($suggestion = array_shift($suggestions));
++
++    $expected_preprocess_functions = [
++      'template_preprocess',
++      'theme_test_preprocess_theme_test_preprocess_suggestions',
++      'test_theme_preprocess_theme_test_preprocess_suggestions',
++      'test_theme_preprocess_theme_test_preprocess_suggestions__kitten',
++    ];
++
++    $preprocess_functions = $registry_theme->get()['theme_test_preprocess_suggestions__kitten__meerkat']['preprocess functions'];
++    $this->assertIdentical($expected_preprocess_functions, $preprocess_functions, 'Suggestion implemented as a function correctly inherits preprocess functions.');
++
++    $preprocess_functions = $registry_theme->get()['theme_test_preprocess_suggestions__kitten__bearcat']['preprocess functions'];
++    $this->assertIdentical($expected_preprocess_functions, $preprocess_functions, 'Suggestion implemented as a template correctly inherits preprocess functions.');
++
+   }
+ 
+   /**
+diff --git a/core/modules/system/src/Tests/Theme/ThemeTest.php b/core/modules/system/src/Tests/Theme/ThemeTest.php
+index c2c0e0b..9db4fa8 100644
+--- a/core/modules/system/src/Tests/Theme/ThemeTest.php
++++ b/core/modules/system/src/Tests/Theme/ThemeTest.php
+@@ -277,7 +277,7 @@ function testPreprocessHtml() {
+   /**
+    * Tests that region attributes can be manipulated via preprocess functions.
+    */
+-  function testRegionClass() {
++  public function testRegionClass() {
+     \Drupal::service('module_installer')->install(array('block', 'theme_region_test'));
+ 
+     // Place a block.
+@@ -287,4 +287,31 @@ function testRegionClass() {
+     $this->assertEqual(count($elements), 1, 'New class found.');
+   }
+ 
++  /**
++   * Ensures suggestion preprocess functions run for default implementations.
++   *
++   * The theme hook used by this test has its base preprocess function in a
++   * separate file, so this test also ensures that that file is correctly loaded
++   * when needed.
++   */
++  public function testSuggestionPreprocessForDefaults() {
++    \Drupal::service('theme_handler')->setDefault('test_theme');
++    // Test with both an unprimed and primed theme registry.
++    drupal_theme_rebuild();
++    for ($i = 0; $i < 2; $i++) {
++      $this->drupalGet('theme-test/preprocess-suggestions');
++      $items = $this->cssSelect('.suggestion');
++      $expected_values = [
++        'Suggestion',
++        'Kitten',
++        'Monkey',
++        'Kitten',
++        'Flamingo',
++      ];
++      foreach ($expected_values as $key => $value) {
++        $this->assertEqual((string) $value, $items[$key]);
++      }
++    }
++  }
++
+ }
+diff --git a/core/modules/system/tests/modules/theme_test/src/ThemeTestController.php b/core/modules/system/tests/modules/theme_test/src/ThemeTestController.php
+index a8f16c6..68b627e 100644
+--- a/core/modules/system/tests/modules/theme_test/src/ThemeTestController.php
++++ b/core/modules/system/tests/modules/theme_test/src/ThemeTestController.php
+@@ -143,4 +143,25 @@ public function nonHtml() {
+     return new JsonResponse(['theme_initialized' => $theme_initialized]);
+   }
+ 
++  /**
++   * Controller for testing preprocess functions with theme suggestions.
++   */
++  public function preprocessSuggestions() {
++    return [
++      [
++        '#theme' => 'theme_test_preprocess_suggestions',
++        '#foo' => 'suggestion',
++      ],
++      [
++        '#theme' => 'theme_test_preprocess_suggestions',
++        '#foo' => 'kitten',
++      ],
++      [
++        '#theme' => 'theme_test_preprocess_suggestions',
++        '#foo' => 'monkey',
++      ],
++      ['#theme' => 'theme_test_preprocess_suggestions__kitten__flamingo'],
++    ];
++  }
++
+ }
+diff --git a/core/modules/system/tests/modules/theme_test/templates/theme-test-preprocess-suggestions.html.twig b/core/modules/system/tests/modules/theme_test/templates/theme-test-preprocess-suggestions.html.twig
+new file mode 100644
+index 0000000..512613d
+--- /dev/null
++++ b/core/modules/system/tests/modules/theme_test/templates/theme-test-preprocess-suggestions.html.twig
+@@ -0,0 +1,4 @@
++<div class="suggestion">{{ foo }}</div>
++{% if bar %}
++  <div class="suggestion">{{ bar }}</div>
++{% endif %}
+diff --git a/core/modules/system/tests/modules/theme_test/theme_test.module b/core/modules/system/tests/modules/theme_test/theme_test.module
+index 7ba5c2d..8b820c3 100644
+--- a/core/modules/system/tests/modules/theme_test/theme_test.module
++++ b/core/modules/system/tests/modules/theme_test/theme_test.module
+@@ -55,6 +55,12 @@ function theme_test_theme($existing, $type, $theme, $path) {
+   $info['test_theme_not_existing_function'] = array(
+     'function' => 'test_theme_not_existing_function',
+   );
++  $items['theme_test_preprocess_suggestions'] = [
++    'variables' => [
++      'foo' => '',
++      'bar' => '',
++    ],
++  ];
+   return $items;
+ }
+ 
+@@ -90,6 +96,27 @@ function theme_theme_test_function_template_override($variables) {
+ }
+ 
+ /**
++ * Implements hook_theme_suggestions_HOOK().
++ */
++function theme_test_theme_suggestions_theme_test_preprocess_suggestions($variables) {
++  return ['theme_test_preprocess_suggestions__' . $variables['foo']];
++}
++
++/**
++ * Implements hook_preprocess_HOOK().
++ */
++function theme_test_preprocess_theme_test_preprocess_suggestions(&$variables) {
++  $variables['foo'] = 'Theme hook implementor=theme_theme_test_preprocess_suggestions().';
++}
++
++/**
++ * Tests a module overriding a default hook with a suggestion.
++ */
++function theme_test_preprocess_theme_test_preprocess_suggestions__monkey(&$variables) {
++  $variables['foo'] = 'Monkey';
++}
++
++/**
+  * Prepares variables for test render element templates.
+  *
+  * Default template: theme-test-render-element.html.twig.
+diff --git a/core/modules/system/tests/modules/theme_test/theme_test.routing.yml b/core/modules/system/tests/modules/theme_test/theme_test.routing.yml
+index 2dbd188..1ff61cf 100644
+--- a/core/modules/system/tests/modules/theme_test/theme_test.routing.yml
++++ b/core/modules/system/tests/modules/theme_test/theme_test.routing.yml
+@@ -103,3 +103,10 @@ theme_test.non_html:
+     _controller: '\Drupal\theme_test\ThemeTestController::nonHtml'
+   requirements:
+     _access: 'TRUE'
++
++theme_test.preprocess_suggestions:
++  path: '/theme-test/preprocess-suggestions'
++  defaults:
++    _controller: '\Drupal\theme_test\ThemeTestController::preprocessSuggestions'
++  requirements:
++    _access: 'TRUE'
+diff --git a/core/modules/system/tests/themes/test_theme/templates/theme-test-preprocess-suggestions--kitten--bearcat.html.twig b/core/modules/system/tests/themes/test_theme/templates/theme-test-preprocess-suggestions--kitten--bearcat.html.twig
+new file mode 100644
+index 0000000..512613d
+--- /dev/null
++++ b/core/modules/system/tests/themes/test_theme/templates/theme-test-preprocess-suggestions--kitten--bearcat.html.twig
+@@ -0,0 +1,4 @@
++<div class="suggestion">{{ foo }}</div>
++{% if bar %}
++  <div class="suggestion">{{ bar }}</div>
++{% endif %}
+diff --git a/core/modules/system/tests/themes/test_theme/templates/theme-test-preprocess-suggestions--suggestion.html.twig b/core/modules/system/tests/themes/test_theme/templates/theme-test-preprocess-suggestions--suggestion.html.twig
+new file mode 100644
+index 0000000..e77924d
+--- /dev/null
++++ b/core/modules/system/tests/themes/test_theme/templates/theme-test-preprocess-suggestions--suggestion.html.twig
+@@ -0,0 +1 @@
++<div class="suggestion">{{ foo }}</div>
+diff --git a/core/modules/system/tests/themes/test_theme/test_theme.theme b/core/modules/system/tests/themes/test_theme/test_theme.theme
+index 9350755..3ce72e3 100644
+--- a/core/modules/system/tests/themes/test_theme/test_theme.theme
++++ b/core/modules/system/tests/themes/test_theme/test_theme.theme
+@@ -105,3 +105,40 @@ function test_theme_theme_test_function_suggestions__module_override($variables)
+ function test_theme_theme_registry_alter(&$registry) {
+   $registry['theme_test_template_test']['variables']['additional'] = 'value';
+ }
++
++/**
++ * Tests a theme overriding a suggestion of a base theme hook.
++ */
++function test_theme_theme_test_preprocess_suggestions__kitten__meerkat($variables) {
++  return 'Theme hook implementor=test_theme_theme_test__suggestion(). Foo=' . $variables['foo'];
++}
++
++/**
++ * Tests a theme overriding a default hook with a suggestion.
++ *
++ * Implements hook_preprocess_HOOK().
++ */
++function test_theme_preprocess_theme_test_preprocess_suggestions(&$variables) {
++  $variables['foo'] = 'Theme hook implementor=test_theme_preprocess_theme_test_preprocess_suggestions().';
++}
++
++/**
++ * Tests a theme overriding a default hook with a suggestion.
++ */
++function test_theme_preprocess_theme_test_preprocess_suggestions__suggestion(&$variables) {
++  $variables['foo'] = 'Suggestion';
++}
++
++/**
++ * Tests a theme overriding a default hook with a suggestion.
++ */
++function test_theme_preprocess_theme_test_preprocess_suggestions__kitten(&$variables) {
++  $variables['foo'] = 'Kitten';
++}
++
++/**
++ * Tests a theme overriding a default hook with a suggestion.
++ */
++function test_theme_preprocess_theme_test_preprocess_suggestions__kitten__flamingo(&$variables) {
++  $variables['bar'] = 'Flamingo';
++}
+diff --git a/core/tests/Drupal/Tests/Core/Theme/RegistryTest.php b/core/tests/Drupal/Tests/Core/Theme/RegistryTest.php
+index 4a9101d..0cb5a25 100644
+--- a/core/tests/Drupal/Tests/Core/Theme/RegistryTest.php
++++ b/core/tests/Drupal/Tests/Core/Theme/RegistryTest.php
+@@ -105,6 +105,9 @@ public function testGetRegistryForModule() {
+       ->method('getImplementations')
+       ->with('theme')
+       ->will($this->returnValue(array('theme_test')));
++    $this->moduleHandler->expects($this->atLeastOnce())
++      ->method('getModuleList')
++      ->willReturn([]);
+ 
+     $registry = $this->registry->get();
+ 

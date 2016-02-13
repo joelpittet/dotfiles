@@ -1,0 +1,36 @@
+diff --git a/core/lib/Drupal/Core/DrupalKernel.php b/core/lib/Drupal/Core/DrupalKernel.php
+index 61c5863..e3afc1f 100644
+--- a/core/lib/Drupal/Core/DrupalKernel.php
++++ b/core/lib/Drupal/Core/DrupalKernel.php
+@@ -465,16 +465,8 @@ public function preHandle(Request $request) {
+     // Put the request on the stack.
+     $this->container->get('request_stack')->push($request);
+ 
+-    // Set the allowed protocols once we have the config available.
+-    $allowed_protocols = $this->container->getParameter('filter_protocols');
+-    if (!$allowed_protocols) {
+-      // \Drupal\Component\Utility\UrlHelper::filterBadProtocol() is called by
+-      // the installer and update.php, in which case the configuration may not
+-      // exist (yet). Provide a minimal default set of allowed protocols for
+-      // these cases.
+-      $allowed_protocols = array('http', 'https');
+-    }
+-    UrlHelper::setAllowedProtocols($allowed_protocols);
++    // Set the allowed protocols.
++    UrlHelper::setAllowedProtocols($this->container->getParameter('filter_protocols'));
+ 
+     // Override of Symfony's mime type guesser singleton.
+     MimeTypeGuesser::registerWithSymfonyGuesser($this->container);
+diff --git a/core/modules/filter/filter.module b/core/modules/filter/filter.module
+index 2287d7a..c186576 100644
+--- a/core/modules/filter/filter.module
++++ b/core/modules/filter/filter.module
+@@ -501,7 +501,7 @@ function _filter_url($text, $filter) {
+   // we cannot cleanly differ between protocols here without hard-coding MAILTO,
+   // so '//' is optional for all protocols.
+   // @see \Drupal\Component\Utility\UrlHelper::filterBadProtocol()
+-  $protocols = \Drupal::getContainer()->getParameter('filter_protocols') ?: ['http', 'https'];
++  $protocols = \Drupal::getContainer()->getParameter('filter_protocols');
+   $protocols = implode(':(?://)?|', $protocols) . ':(?://)?';
+ 
+   $valid_url_path_characters = "[\p{L}\p{M}\p{N}!\*\';:=\+,\.\$\/%#\[\]\-_~@&]";

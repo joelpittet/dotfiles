@@ -1,0 +1,25 @@
+diff --git a/core/themes/bartik/bartik.libraries.yml b/core/themes/bartik/bartik.libraries.yml
+index 009a67f..2ae3ae0 100644
+--- a/core/themes/bartik/bartik.libraries.yml
++++ b/core/themes/bartik/bartik.libraries.yml
+@@ -35,7 +35,6 @@ global-styling:
+       css/components/site-footer.css: {}
+       css/components/table.css: {}
+       css/components/tabs.css: {}
+-      css/components/tips.css: {}
+       css/components/toolbar.css: {}
+       css/components/featured-bottom.css: {}
+       css/components/user.css: {}
+diff --git a/core/themes/bartik/css/components/tips.css b/core/themes/bartik/css/components/tips.css
+deleted file mode 100644
+index 6d350fa..0000000
+--- a/core/themes/bartik/css/components/tips.css
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/* ----------------- Tips ----------------- */
+-ul.tips {
+-  padding: 0 0 0 1.25em; /* LTR */
+-}
+-[dir="rtl"] ul.tips {
+-  padding: 0 1.25em 0 0;
+-}

@@ -1,0 +1,56 @@
+diff --git a/core/modules/system/src/Tests/Extension/InfoParserUnitTest.php b/core/modules/system/src/Tests/Extension/InfoParserUnitTest.php
+index 767e0a1..ae52201 100644
+--- a/core/modules/system/src/Tests/Extension/InfoParserUnitTest.php
++++ b/core/modules/system/src/Tests/Extension/InfoParserUnitTest.php
+@@ -10,6 +10,7 @@
+ use Drupal\simpletest\KernelTestBase;
+ use Drupal\Core\Extension\InfoParser;
+ use Drupal\Core\Extension\InfoParserException;
++use Drupal\Core\Updater\Updater;
+ 
+ /**
+  * Tests InfoParser class and exception.
+@@ -84,4 +85,17 @@ public function testInfoParser() {
+     $this->assertEqual($info_values['double_colon'], 'dummyClassName::', 'Value containing double-colon was parsed correctly.', 'System');
+   }
+ 
++  /**
++   * Tests project and child project showing correct title.
++   *
++   * @see https://drupal.org/node/2409515
++   */
++  public function testGetProjectTitleWithChild() {
++    // Get the project title from it's directory. If it can't find the title
++    // it will choose the first project title in the directory.
++    $directory = \Drupal::root() . '/core/modules/system/tests/modules/module_handler_test_multiple';
++    $title = Updater::getProjectTitle($directory);
++    $this->assertEqual('module handler test multiple', $title);
++  }
++
+ }
+diff --git a/core/modules/system/tests/modules/module_handler_test_multiple/module_handler_test_multiple.info.yml b/core/modules/system/tests/modules/module_handler_test_multiple/module_handler_test_multiple.info.yml
+new file mode 100644
+index 0000000..4e88ccb
+--- /dev/null
++++ b/core/modules/system/tests/modules/module_handler_test_multiple/module_handler_test_multiple.info.yml
+@@ -0,0 +1,7 @@
++name: module handler test multiple
++type: module
++description: Test module used to test adding modules with child module.
++package: Testing
++version: VERSION
++core: 8.x
++hidden: true
+diff --git a/core/modules/system/tests/modules/module_handler_test_multiple/module_handler_test_multiple_child/module_handler_test_multiple_child.info.yml b/core/modules/system/tests/modules/module_handler_test_multiple/module_handler_test_multiple_child/module_handler_test_multiple_child.info.yml
+new file mode 100644
+index 0000000..77bfc2a
+--- /dev/null
++++ b/core/modules/system/tests/modules/module_handler_test_multiple/module_handler_test_multiple_child/module_handler_test_multiple_child.info.yml
+@@ -0,0 +1,7 @@
++name: module handler test multiple child
++type: module
++description: Child of test module used to test adding modules with child module.
++package: Testing
++version: VERSION
++core: 8.x
++hidden: true

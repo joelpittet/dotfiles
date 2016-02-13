@@ -1,0 +1,2372 @@
+diff --git a/core/includes/menu.inc b/core/includes/menu.inc
+index 56566e1..b2e115d 100644
+--- a/core/includes/menu.inc
++++ b/core/includes/menu.inc
+@@ -126,8 +126,8 @@ function menu_local_tasks($level = 0) {
+     if (!\Drupal::request()->attributes->has('exception') && !empty($route_name)) {
+       $manager = \Drupal::service('plugin.manager.menu.local_task');
+       $local_tasks = $manager->getTasksBuild($route_name);
+-      foreach ($local_tasks as $level => $items) {
+-        $data['tabs'][$level] = empty($data['tabs'][$level]) ? $items : array_merge($data['tabs'][$level], $items);
++      foreach ($local_tasks as $tab_level => $items) {
++        $data['tabs'][$tab_level] = empty($data['tabs'][$tab_level]) ? $items : array_merge($data['tabs'][$tab_level], $items);
+       }
+     }
+ 
+@@ -173,16 +173,6 @@ function menu_secondary_local_tasks() {
+ }
+ 
+ /**
+- * Returns the rendered local actions at the current level.
+- */
+-function menu_get_local_actions() {
+-  $links = menu_local_tasks();
+-  $route_name = Drupal::routeMatch()->getRouteName();
+-  $manager = \Drupal::service('plugin.manager.menu.local_action');
+-  return $manager->getActionsForRoute($route_name) + $links['actions'];
+-}
+-
+-/**
+  * Returns the router path, or the path for a default local task's parent.
+  */
+ function menu_tab_root_path() {
+diff --git a/core/includes/theme.inc b/core/includes/theme.inc
+index cfdfa89..8c60084 100644
+--- a/core/includes/theme.inc
++++ b/core/includes/theme.inc
+@@ -1338,14 +1338,6 @@ function template_preprocess_page(&$variables) {
+     $variables['is_front'] = FALSE;
+     $variables['db_is_active'] = FALSE;
+   }
+-  if (!defined('MAINTENANCE_MODE')) {
+-    $variables['action_links']   = menu_get_local_actions();
+-    $variables['tabs']           = menu_local_tabs();
+-  }
+-  else {
+-    $variables['action_links']   = array();
+-    $variables['tabs']           = array();
+-  }
+ 
+   if ($node = \Drupal::routeMatch()->getParameter('node')) {
+     $variables['node'] = $node;
+diff --git a/core/lib/Drupal/Core/Menu/LocalActionManager.php b/core/lib/Drupal/Core/Menu/LocalActionManager.php
+index c387b15..eb1e2d0 100644
+--- a/core/lib/Drupal/Core/Menu/LocalActionManager.php
++++ b/core/lib/Drupal/Core/Menu/LocalActionManager.php
+@@ -191,10 +191,11 @@ public function getActionsForRoute($route_appears) {
+           'url' => Url::fromRoute($route_name, $route_parameters),
+           'localized_options' => $plugin->getOptions($this->routeMatch),
+         ),
+-        '#access' => $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account),
++        '#access' => $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE),
+         '#weight' => $plugin->getWeight(),
+       );
+     }
++
+     return $links;
+   }
+ 
+diff --git a/core/lib/Drupal/Core/Menu/LocalTaskManager.php b/core/lib/Drupal/Core/Menu/LocalTaskManager.php
+index 5b12ac8..3f2ab8b 100644
+--- a/core/lib/Drupal/Core/Menu/LocalTaskManager.php
++++ b/core/lib/Drupal/Core/Menu/LocalTaskManager.php
+@@ -302,31 +302,28 @@ public function getTasksBuild($current_route_name) {
+         $route_name = $child->getRouteName();
+         $route_parameters = $child->getRouteParameters($this->routeMatch);
+ 
+-        // Find out whether the user has access to the task.
+-        $access = $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account);
+-        if ($access) {
+-          $active = $this->isRouteActive($current_route_name, $route_name, $route_parameters);
++        $active = $this->isRouteActive($current_route_name, $route_name, $route_parameters);
+ 
+-          // The plugin may have been set active in getLocalTasksForRoute() if
+-          // one of its child tabs is the active tab.
+-          $active = $active || $child->getActive();
+-          // @todo It might make sense to use link render elements instead.
++        // The plugin may have been set active in getLocalTasksForRoute() if
++        // one of its child tabs is the active tab.
++        $active = $active || $child->getActive();
++        // @todo It might make sense to use link render elements instead.
+ 
+-          $link = array(
+-            'title' => $this->getTitle($child),
+-            'url' => Url::fromRoute($route_name, $route_parameters),
+-            'localized_options' => $child->getOptions($this->routeMatch),
+-          );
+-          $build[$level][$plugin_id] = array(
+-            '#theme' => 'menu_local_task',
+-            '#link' => $link,
+-            '#active' => $active,
+-            '#weight' => $child->getWeight(),
+-            '#access' => $access,
+-          );
+-        }
++        $link = array(
++          'title' => $this->getTitle($child),
++          'url' => Url::fromRoute($route_name, $route_parameters),
++          'localized_options' => $child->getOptions($this->routeMatch),
++        );
++        $build[$level][$plugin_id] = array(
++          '#theme' => 'menu_local_task',
++          '#link' => $link,
++          '#active' => $active,
++          '#weight' => $child->getWeight(),
++          '#access' => $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE),
++        );
+       }
+     }
++
+     return $build;
+   }
+ 
+diff --git a/core/modules/aggregator/src/Tests/AggregatorTestBase.php b/core/modules/aggregator/src/Tests/AggregatorTestBase.php
+index 3bee7f4..3af2217 100644
+--- a/core/modules/aggregator/src/Tests/AggregatorTestBase.php
++++ b/core/modules/aggregator/src/Tests/AggregatorTestBase.php
+@@ -28,7 +28,7 @@
+    *
+    * @var array
+    */
+-  public static $modules = array('node', 'aggregator', 'aggregator_test', 'views');
++  public static $modules = ['block', 'node', 'aggregator', 'aggregator_test', 'views'];
+ 
+   /**
+    * {@inheritdoc}
+@@ -43,6 +43,7 @@ protected function setUp() {
+ 
+     $this->adminUser = $this->drupalCreateUser(array('access administration pages', 'administer news feeds', 'access news feeds', 'create article content'));
+     $this->drupalLogin($this->adminUser);
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/block/src/Tests/BlockHiddenRegionTest.php b/core/modules/block/src/Tests/BlockHiddenRegionTest.php
+index 347cdaf..3ddcd82 100644
+--- a/core/modules/block/src/Tests/BlockHiddenRegionTest.php
++++ b/core/modules/block/src/Tests/BlockHiddenRegionTest.php
+@@ -42,6 +42,7 @@ protected function setUp() {
+ 
+     $this->drupalLogin($this->adminUser);
+     $this->drupalPlaceBlock('search_form_block');
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/block/src/Tests/BlockTest.php b/core/modules/block/src/Tests/BlockTest.php
+index 5ab46e1..69f09b5 100644
+--- a/core/modules/block/src/Tests/BlockTest.php
++++ b/core/modules/block/src/Tests/BlockTest.php
+@@ -222,6 +222,7 @@ public function testBlockThemeSelector() {
+   function testThemeName() {
+     // Enable the help block.
+     $this->drupalPlaceBlock('help_block', array('region' => 'help'));
++    $this->drupalPlaceBlock('system_local_tasks_block');
+     // Explicitly set the default and admin themes.
+     $theme = 'block_test_specialchars_theme';
+     \Drupal::service('theme_handler')->install(array($theme));
+diff --git a/core/modules/block/src/Tests/NonDefaultBlockAdminTest.php b/core/modules/block/src/Tests/NonDefaultBlockAdminTest.php
+index bc55ab2..061dfa1 100644
+--- a/core/modules/block/src/Tests/NonDefaultBlockAdminTest.php
++++ b/core/modules/block/src/Tests/NonDefaultBlockAdminTest.php
+@@ -24,6 +24,15 @@ class NonDefaultBlockAdminTest extends WebTestBase {
+   public static $modules = array('block');
+ 
+   /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_tasks_block');
++  }
++
++  /**
+    * Test non-default theme admin.
+    */
+   function testNonDefaultBlockAdmin() {
+diff --git a/core/modules/block_content/src/Tests/BlockContentTestBase.php b/core/modules/block_content/src/Tests/BlockContentTestBase.php
+index 82139c0..4500fd0 100644
+--- a/core/modules/block_content/src/Tests/BlockContentTestBase.php
++++ b/core/modules/block_content/src/Tests/BlockContentTestBase.php
+@@ -60,6 +60,7 @@ protected function setUp() {
+     }
+ 
+     $this->adminUser = $this->drupalCreateUser($this->permissions);
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/comment/src/Tests/CommentTestBase.php b/core/modules/comment/src/Tests/CommentTestBase.php
+index a52cbb3..e258fc8 100644
+--- a/core/modules/comment/src/Tests/CommentTestBase.php
++++ b/core/modules/comment/src/Tests/CommentTestBase.php
+@@ -27,7 +27,7 @@
+    *
+    * @var array
+    */
+-  public static $modules = array('comment', 'node', 'history', 'field_ui', 'datetime');
++  public static $modules = ['block', 'comment', 'node', 'history', 'field_ui', 'datetime'];
+ 
+   /**
+    * An administrative user with permission to configure comment settings.
+@@ -86,6 +86,7 @@ protected function setUp() {
+ 
+     // Create a test node authored by the web user.
+     $this->node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1, 'uid' => $this->webUser->id()));
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/config/src/Tests/ConfigEntityListTest.php b/core/modules/config/src/Tests/ConfigEntityListTest.php
+index ee58be5..209039a 100644
+--- a/core/modules/config/src/Tests/ConfigEntityListTest.php
++++ b/core/modules/config/src/Tests/ConfigEntityListTest.php
+@@ -23,7 +23,7 @@ class ConfigEntityListTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('config_test');
++  public static $modules = ['block', 'config_test'];
+ 
+   /**
+    * {@inheritdoc}
+@@ -33,6 +33,7 @@ protected function setUp() {
+     // Delete the override config_test entity since it is not required by this
+     // test.
+     \Drupal::entityManager()->getStorage('config_test')->load('override')->delete();
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/config_translation/src/Tests/ConfigTranslationListUiTest.php b/core/modules/config_translation/src/Tests/ConfigTranslationListUiTest.php
+index 4ceec20..c9a74fe 100644
+--- a/core/modules/config_translation/src/Tests/ConfigTranslationListUiTest.php
++++ b/core/modules/config_translation/src/Tests/ConfigTranslationListUiTest.php
+@@ -80,6 +80,7 @@ protected function setUp() {
+     $this->config('locale.settings')
+       ->set('translation.import_enabled', TRUE)
+       ->save();
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/config_translation/src/Tests/ConfigTranslationOverviewTest.php b/core/modules/config_translation/src/Tests/ConfigTranslationOverviewTest.php
+index 0916dcd..725df7c 100644
+--- a/core/modules/config_translation/src/Tests/ConfigTranslationOverviewTest.php
++++ b/core/modules/config_translation/src/Tests/ConfigTranslationOverviewTest.php
+@@ -24,6 +24,7 @@ class ConfigTranslationOverviewTest extends WebTestBase {
+    * @var array
+    */
+   public static $modules = [
++    'block',
+     'config_test',
+     'config_translation',
+     'config_translation_test',
+@@ -67,6 +68,7 @@ protected function setUp() {
+       ConfigurableLanguage::createFromLangcode($langcode)->save();
+     }
+     $this->localeStorage = $this->container->get('locale.storage');
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/config_translation/src/Tests/ConfigTranslationUiTest.php b/core/modules/config_translation/src/Tests/ConfigTranslationUiTest.php
+index a05f7e7..080966d 100644
+--- a/core/modules/config_translation/src/Tests/ConfigTranslationUiTest.php
++++ b/core/modules/config_translation/src/Tests/ConfigTranslationUiTest.php
+@@ -31,6 +31,7 @@ class ConfigTranslationUiTest extends WebTestBase {
+    * @var array
+    */
+   public static $modules = [
++    'block',
+     'config_translation',
+     'config_translation_test',
+     'contact',
+@@ -117,6 +118,7 @@ protected function setUp() {
+       ConfigurableLanguage::createFromLangcode($langcode)->save();
+     }
+     $this->localeStorage = $this->container->get('locale.storage');
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/contact/src/Tests/ContactSitewideTest.php b/core/modules/contact/src/Tests/ContactSitewideTest.php
+index 87d693a..9cb6910 100644
+--- a/core/modules/contact/src/Tests/ContactSitewideTest.php
++++ b/core/modules/contact/src/Tests/ContactSitewideTest.php
+@@ -39,6 +39,7 @@ class ContactSitewideTest extends WebTestBase {
+   protected function setUp() {
+     parent::setUp();
+     $this->drupalPlaceBlock('system_breadcrumb_block');
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/contact/src/Tests/ContactStorageTest.php b/core/modules/contact/src/Tests/ContactStorageTest.php
+index 5d62e10..f18d10e 100644
+--- a/core/modules/contact/src/Tests/ContactStorageTest.php
++++ b/core/modules/contact/src/Tests/ContactStorageTest.php
+@@ -28,13 +28,14 @@ class ContactStorageTest extends ContactSitewideTest {
+    *
+    * @var array
+    */
+-  public static $modules = array(
++  public static $modules = [
++    'block',
+     'text',
+     'contact',
+     'field_ui',
+     'contact_storage_test',
+     'contact_test',
+-  );
++  ];
+ 
+   /**
+    * Tests configuration options and the site-wide contact form.
+diff --git a/core/modules/field_ui/src/Tests/EntityDisplayModeTest.php b/core/modules/field_ui/src/Tests/EntityDisplayModeTest.php
+index 7b7fe12..62b2768 100644
+--- a/core/modules/field_ui/src/Tests/EntityDisplayModeTest.php
++++ b/core/modules/field_ui/src/Tests/EntityDisplayModeTest.php
+@@ -19,9 +19,18 @@ class EntityDisplayModeTest extends WebTestBase {
+   /**
+    * Modules to enable.
+    *
+-   * @var array
++   * @var string[]
+    */
+-  public static $modules = array('entity_test', 'field_ui');
++  public static $modules = ['block', 'entity_test', 'field_ui'];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_actions_block');
++  }
+ 
+   /**
+    * Tests the EntityViewMode user interface.
+diff --git a/core/modules/field_ui/src/Tests/FieldUIRouteTest.php b/core/modules/field_ui/src/Tests/FieldUIRouteTest.php
+index 332a87d..25931c9 100644
+--- a/core/modules/field_ui/src/Tests/FieldUIRouteTest.php
++++ b/core/modules/field_ui/src/Tests/FieldUIRouteTest.php
+@@ -23,7 +23,7 @@ class FieldUIRouteTest extends WebTestBase {
+    *
+    * @var string[]
+    */
+-  public static $modules = array('entity_test', 'field_ui');
++  public static $modules = ['block', 'entity_test', 'field_ui'];
+ 
+   /**
+    * {@inheritdoc}
+@@ -32,6 +32,7 @@ protected function setUp() {
+     parent::setUp();
+ 
+     $this->drupalLogin($this->rootUser);
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/field_ui/src/Tests/ManageFieldsTest.php b/core/modules/field_ui/src/Tests/ManageFieldsTest.php
+index 3b2ac3e..a978c0f 100644
+--- a/core/modules/field_ui/src/Tests/ManageFieldsTest.php
++++ b/core/modules/field_ui/src/Tests/ManageFieldsTest.php
+@@ -66,7 +66,10 @@ class ManageFieldsTest extends WebTestBase {
+    */
+   protected function setUp() {
+     parent::setUp();
++
+     $this->drupalPlaceBlock('system_breadcrumb_block');
++    $this->drupalPlaceBlock('system_local_actions_block');
++    $this->drupalPlaceBlock('system_local_tasks_block');
+ 
+     // Create a test user.
+     $admin_user = $this->drupalCreateUser(array('access content', 'administer content types', 'administer node fields', 'administer node form display', 'administer node display', 'administer taxonomy', 'administer taxonomy_term fields', 'administer taxonomy_term display', 'administer users', 'administer account settings', 'administer user display', 'bypass node access'));
+diff --git a/core/modules/filter/src/Tests/FilterAdminTest.php b/core/modules/filter/src/Tests/FilterAdminTest.php
+index 7e6a2d3..897943cf 100644
+--- a/core/modules/filter/src/Tests/FilterAdminTest.php
++++ b/core/modules/filter/src/Tests/FilterAdminTest.php
+@@ -22,7 +22,7 @@ class FilterAdminTest extends WebTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  public static $modules = array('filter', 'node');
++  public static $modules = ['block', 'filter', 'node'];
+ 
+   /**
+    * An user with administration permissions.
+@@ -105,6 +105,7 @@ protected function setUp() {
+     user_role_grant_permissions('authenticated', array($basic_html_format->getPermissionName()));
+     user_role_grant_permissions('anonymous', array($restricted_html_format->getPermissionName()));
+     $this->drupalLogin($this->adminUser);
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/filter/src/Tests/FilterFormatAccessTest.php b/core/modules/filter/src/Tests/FilterFormatAccessTest.php
+index 029c60b..f165713 100644
+--- a/core/modules/filter/src/Tests/FilterFormatAccessTest.php
++++ b/core/modules/filter/src/Tests/FilterFormatAccessTest.php
+@@ -24,7 +24,7 @@ class FilterFormatAccessTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('filter', 'node');
++  public static $modules = ['block', 'filter', 'node'];
+ 
+   /**
+    * A user with administrative permissions.
+@@ -114,6 +114,7 @@ protected function setUp() {
+       $this->secondAllowedFormat->getPermissionName(),
+       $this->disallowedFormat->getPermissionName(),
+     ));
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/forum/src/Tests/ForumTest.php b/core/modules/forum/src/Tests/ForumTest.php
+index 73089e3..e80e9ad 100644
+--- a/core/modules/forum/src/Tests/ForumTest.php
++++ b/core/modules/forum/src/Tests/ForumTest.php
+@@ -115,6 +115,7 @@ protected function setUp() {
+       'access comments',
+     ));
+     $this->drupalPlaceBlock('help_block', array('region' => 'help'));
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/language/src/Tests/LanguagePathMonolingualTest.php b/core/modules/language/src/Tests/LanguagePathMonolingualTest.php
+index c20a57e..a4c92c0 100644
+--- a/core/modules/language/src/Tests/LanguagePathMonolingualTest.php
++++ b/core/modules/language/src/Tests/LanguagePathMonolingualTest.php
+@@ -21,7 +21,7 @@ class LanguagePathMonolingualTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('language', 'path');
++  public static $modules = ['block', 'language', 'path'];
+ 
+   protected function setUp() {
+     parent::setUp();
+@@ -56,6 +56,7 @@ protected function setUp() {
+     // Set language detection to URL.
+     $edit = array('language_interface[enabled][language-url]' => TRUE);
+     $this->drupalPostForm('admin/config/regional/language/detection', $edit, t('Save settings'));
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/language/src/Tests/LanguageTourTest.php b/core/modules/language/src/Tests/LanguageTourTest.php
+index 98418b6..91cbdab 100644
+--- a/core/modules/language/src/Tests/LanguageTourTest.php
++++ b/core/modules/language/src/Tests/LanguageTourTest.php
+@@ -28,7 +28,7 @@ class LanguageTourTest extends TourTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('language', 'tour');
++  public static $modules = ['block', 'language', 'tour'];
+ 
+   /**
+    * {@inheritdoc}
+@@ -37,6 +37,7 @@ protected function setUp() {
+     parent::setUp();
+     $this->adminUser = $this->drupalCreateUser(array('administer languages', 'access tour'));
+     $this->drupalLogin($this->adminUser);
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/node/src/Tests/NodeTranslationUITest.php b/core/modules/node/src/Tests/NodeTranslationUITest.php
+index c392750..013466c 100644
+--- a/core/modules/node/src/Tests/NodeTranslationUITest.php
++++ b/core/modules/node/src/Tests/NodeTranslationUITest.php
+@@ -28,6 +28,7 @@ class NodeTranslationUITest extends ContentTranslationUITestBase {
+     'languages:language_interface',
+     'theme',
+     'user.permissions',
++    'route.name',
+     'route.menu_active_trails:account',
+     'route.menu_active_trails:footer',
+     'route.menu_active_trails:main',
+diff --git a/core/modules/node/src/Tests/PageEditTest.php b/core/modules/node/src/Tests/PageEditTest.php
+index 9082dca..9ce1b71 100644
+--- a/core/modules/node/src/Tests/PageEditTest.php
++++ b/core/modules/node/src/Tests/PageEditTest.php
+@@ -16,11 +16,19 @@ class PageEditTest extends NodeTestBase {
+   protected $webUser;
+   protected $adminUser;
+ 
++  /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block', 'node', 'datetime'];
++
+   protected function setUp() {
+     parent::setUp();
+ 
+     $this->webUser = $this->drupalCreateUser(array('edit own page content', 'create page content'));
+     $this->adminUser = $this->drupalCreateUser(array('bypass node access', 'administer nodes'));
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/page_cache/src/Tests/PageCacheTagsIntegrationTest.php b/core/modules/page_cache/src/Tests/PageCacheTagsIntegrationTest.php
+index c471cea..f19ac70 100644
+--- a/core/modules/page_cache/src/Tests/PageCacheTagsIntegrationTest.php
++++ b/core/modules/page_cache/src/Tests/PageCacheTagsIntegrationTest.php
+@@ -103,6 +103,8 @@ function testPageCacheTags() {
+       'config:block.block.bartik_main_menu',
+       'config:block.block.bartik_account_menu',
+       'config:block.block.bartik_messages',
++      'config:block.block.bartik_local_actions',
++      'config:block.block.bartik_local_tasks',
+       'node_view',
+       'node:' . $node_1->id(),
+       'user:' . $author_1->id(),
+@@ -137,6 +139,8 @@ function testPageCacheTags() {
+       'config:block.block.bartik_main_menu',
+       'config:block.block.bartik_account_menu',
+       'config:block.block.bartik_messages',
++      'config:block.block.bartik_local_actions',
++      'config:block.block.bartik_local_tasks',
+       'node_view',
+       'node:' . $node_2->id(),
+       'user:' . $author_2->id(),
+diff --git a/core/modules/search/src/Tests/SearchConfigSettingsFormTest.php b/core/modules/search/src/Tests/SearchConfigSettingsFormTest.php
+index a99ea45..72bc6ac 100644
+--- a/core/modules/search/src/Tests/SearchConfigSettingsFormTest.php
++++ b/core/modules/search/src/Tests/SearchConfigSettingsFormTest.php
+@@ -58,6 +58,7 @@ protected function setUp() {
+ 
+     // Enable the search block.
+     $this->drupalPlaceBlock('search_form_block');
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/search/src/Tests/SearchPageTextTest.php b/core/modules/search/src/Tests/SearchPageTextTest.php
+index 408848c..bd7278c 100644
+--- a/core/modules/search/src/Tests/SearchPageTextTest.php
++++ b/core/modules/search/src/Tests/SearchPageTextTest.php
+@@ -23,11 +23,22 @@ class SearchPageTextTest extends SearchTestBase {
+    */
+   protected $searchingUser;
+ 
++  /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block'];
++
++  /**
++   * {@inheritdoc}
++   */
+   protected function setUp() {
+     parent::setUp();
+ 
+     // Create user.
+     $this->searchingUser = $this->drupalCreateUser(array('search content', 'access user profiles', 'use advanced search'));
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/shortcut/src/Tests/ShortcutSetsTest.php b/core/modules/shortcut/src/Tests/ShortcutSetsTest.php
+index 7511205..948d0db 100644
+--- a/core/modules/shortcut/src/Tests/ShortcutSetsTest.php
++++ b/core/modules/shortcut/src/Tests/ShortcutSetsTest.php
+@@ -18,6 +18,22 @@
+ class ShortcutSetsTest extends ShortcutTestBase {
+ 
+   /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block'];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_actions_block');
++  }
++
++  /**
+    * Tests creating a shortcut set.
+    */
+   function testShortcutSetAdd() {
+diff --git a/core/modules/simpletest/src/Tests/BrowserTest.php b/core/modules/simpletest/src/Tests/BrowserTest.php
+index 02422e7..778198a 100644
+--- a/core/modules/simpletest/src/Tests/BrowserTest.php
++++ b/core/modules/simpletest/src/Tests/BrowserTest.php
+@@ -24,6 +24,22 @@ class BrowserTest extends WebTestBase {
+   protected static $cookieSet = FALSE;
+ 
+   /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block'];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_tasks_block');
++  }
++
++  /**
+    * Test \Drupal\simpletest\WebTestBase::getAbsoluteUrl().
+    */
+   function testGetAbsoluteUrl() {
+diff --git a/core/modules/system/config/schema/system.schema.yml b/core/modules/system/config/schema/system.schema.yml
+index 12b0e6c..9eac1de 100644
+--- a/core/modules/system/config/schema/system.schema.yml
++++ b/core/modules/system/config/schema/system.schema.yml
+@@ -342,6 +342,17 @@ block.settings.system_menu_block:*:
+       type: integer
+       label: 'Maximum number of levels'
+ 
++block.settings.system_local_tasks_block:
++  type: block_settings
++  label: 'Tabs block'
++  mapping:
++    primary:
++      type: boolean
++      label: 'Whether primary tabs are shown'
++    secondary:
++      type: boolean
++      label: 'Whether secondary tabs are shown'
++
+ condition.plugin.request_path:
+   type: condition.plugin
+   mapping:
+diff --git a/core/modules/system/src/Plugin/Block/SystemLocalActionsBlock.php b/core/modules/system/src/Plugin/Block/SystemLocalActionsBlock.php
+new file mode 100644
+index 0000000..23a65c0
+--- /dev/null
++++ b/core/modules/system/src/Plugin/Block/SystemLocalActionsBlock.php
+@@ -0,0 +1,129 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\system\Plugin\Block\SystemLocalActionsBlock.
++ */
++
++namespace Drupal\system\Plugin\Block;
++
++use Drupal\Core\Block\BlockBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Menu\LocalActionManagerInterface;
++use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++use Drupal\Core\Routing\RouteMatchInterface;
++
++/**
++ * Provides a block to display the local actions.
++ *
++ * @Block(
++ *   id = "system_local_actions_block",
++ *   admin_label = @Translation("Primary admin actions")
++ * )
++ */
++class SystemLocalActionsBlock extends BlockBase implements ContainerFactoryPluginInterface {
++
++  /**
++   * The local action manager.
++   *
++   * @var \Drupal\Core\Menu\LocalActionManagerInterface
++   */
++  protected $localActionManager;
++
++  /**
++   * The route match.
++   *
++   * @var \Drupal\Core\Routing\RouteMatchInterface
++   */
++  protected $routeMatch;
++
++  /**
++   * Creates a SystemLocalActionsBlock instance.
++   *
++   * @param array $configuration
++   *   A configuration array containing information about the plugin instance.
++   * @param string $plugin_id
++   *   The plugin_id for the plugin instance.
++   * @param mixed $plugin_definition
++   *   The plugin implementation definition.
++   * @param \Drupal\Core\Menu\LocalActionManagerInterface $local_action_manager
++   *   A local action manager.
++   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
++   *   The route match.
++   */
++  public function __construct(array $configuration, $plugin_id, $plugin_definition, LocalActionManagerInterface $local_action_manager, RouteMatchInterface $route_match) {
++    parent::__construct($configuration, $plugin_id, $plugin_definition);
++    $this->localActionManager = $local_action_manager;
++    $this->routeMatch = $route_match;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
++    return new static(
++      $configuration,
++      $plugin_id,
++      $plugin_definition,
++      $container->get('plugin.manager.menu.local_action'),
++      $container->get('current_route_match')
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function defaultConfiguration() {
++    return ['label_display' => FALSE];
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function build() {
++    $build = [];
++    $links = menu_local_tasks();
++    $route_name = $this->routeMatch->getRouteName();
++    $local_actions = $this->localActionManager->getActionsForRoute($route_name) + $links['actions'];
++    if (empty($local_actions)) {
++      return [];
++    }
++
++    $build['local_actions'] = $local_actions;
++
++    return $build;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
++    $form = parent::buildConfigurationForm($form, $form_state);
++
++    // The "Primary admin actions" block is never cacheable because hooks creating local
++    // actions don't provide cacheability metadata.
++    // @todo Remove after https://www.drupal.org/node/2511516 has landed.
++    $form['cache']['#disabled'] = TRUE;
++    $form['cache']['#description'] = $this->t('This block is never cacheable.');
++    $form['cache']['max_age']['#value'] = 0;
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getCacheMaxAge() {
++    // @todo Remove after https://www.drupal.org/node/2511516 has landed.
++    return 0;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getCacheContexts() {
++    return ['route.name'];
++  }
++
++}
+diff --git a/core/modules/system/src/Plugin/Block/SystemLocalTasksBlock.php b/core/modules/system/src/Plugin/Block/SystemLocalTasksBlock.php
+new file mode 100644
+index 0000000..bbbbb9d
+--- /dev/null
++++ b/core/modules/system/src/Plugin/Block/SystemLocalTasksBlock.php
+@@ -0,0 +1,146 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\system\Plugin\Block\SystemLocalTasksBlock.
++ */
++
++namespace Drupal\system\Plugin\Block;
++
++use Drupal\Core\Block\BlockBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++
++/**
++ * Provides a "Tabs" block to display the local tasks.
++ *
++ * @Block(
++ *   id = "system_local_tasks_block",
++ *   admin_label = @Translation("Tabs"),
++ * )
++ */
++class SystemLocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterface {
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
++    return new static(
++      $configuration,
++      $plugin_id,
++      $plugin_definition
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function defaultConfiguration() {
++    return [
++      'label_display' => FALSE,
++      'primary' => TRUE,
++      'secondary' => TRUE,
++    ];
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function build() {
++    $config = $this->configuration;
++
++    $tabs = [
++      '#theme' => 'menu_local_tasks',
++    ];
++
++    // Add only selected levels for the printed output.
++    if ($config['primary']) {
++      $tabs += [
++        '#primary' => menu_primary_local_tasks(),
++      ];
++    }
++    if ($config['secondary']) {
++      $tabs += [
++        '#secondary' => menu_secondary_local_tasks(),
++      ];
++    }
++
++    if (empty($tabs['#primary']) && empty($tabs['#secondary'])) {
++      return [];
++    }
++
++    $build['tabs'] = $tabs;
++
++    return $build;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
++    $form = parent::buildConfigurationForm($form, $form_state);
++
++    // The "Page actions" block is never cacheable because of hooks creating
++    // local tasks doesn't provide cacheability metadata.
++    // @todo Remove after https://www.drupal.org/node/2511516 has landed.
++    $form['cache']['#disabled'] = TRUE;
++    $form['cache']['#description'] = $this->t('This block is never cacheable.');
++    $form['cache']['max_age']['#value'] = 0;
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getCacheMaxAge() {
++    // @todo Remove after https://www.drupal.org/node/2511516 has landed.
++    return 0;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getCacheContexts() {
++    return ['route.name'];
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function blockForm($form, FormStateInterface $form_state) {
++    $config = $this->configuration;
++    $defaults = $this->defaultConfiguration();
++
++    $form['levels'] = array(
++      '#type' => 'details',
++      '#title' => $this->t('Shown tabs'),
++      '#description' => $this->t('Select tabs being shown in the block'),
++      // Open if not set to defaults.
++      '#open' => $defaults['primary'] !== $config['primary'] || $defaults['secondary'] !== $config['secondary'],
++    );
++    $form['levels']['primary'] = [
++      '#type' => 'checkbox',
++      '#title' => $this->t('Show primary tabs'),
++      '#default_value' => $config['primary'],
++    ];
++    $form['levels']['secondary'] = [
++      '#type' => 'checkbox',
++      '#title' => $this->t('Show secondary tabs'),
++      '#default_value' => $config['secondary'],
++    ];
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function blockSubmit($form, FormStateInterface $form_state) {
++    $levels = $form_state->getValue('levels');
++    $this->configuration['primary'] = $levels['primary'];
++    $this->configuration['secondary'] = $levels['secondary'];
++  }
++
++}
+diff --git a/core/modules/system/src/Tests/Menu/LocalActionTest.php b/core/modules/system/src/Tests/Menu/LocalActionTest.php
+index 468cbbb..6652b41 100644
+--- a/core/modules/system/src/Tests/Menu/LocalActionTest.php
++++ b/core/modules/system/src/Tests/Menu/LocalActionTest.php
+@@ -18,9 +18,20 @@
+ class LocalActionTest extends WebTestBase {
+ 
+   /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block', 'menu_test'];
++
++  /**
+    * {@inheritdoc}
+    */
+-  public static $modules = array('menu_test');
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_actions_block');
++  }
+ 
+   /**
+    * Tests appearance of local actions.
+diff --git a/core/modules/system/src/Tests/Menu/LocalTasksTest.php b/core/modules/system/src/Tests/Menu/LocalTasksTest.php
+index cb6b529..472dba2 100644
+--- a/core/modules/system/src/Tests/Menu/LocalTasksTest.php
++++ b/core/modules/system/src/Tests/Menu/LocalTasksTest.php
+@@ -17,7 +17,28 @@
+  */
+ class LocalTasksTest extends WebTestBase {
+ 
+-  public static $modules = array('menu_test', 'entity_test');
++  /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block', 'menu_test', 'entity_test'];
++
++  /**
++   * The local tasks block under testing.
++   *
++   * @var \Drupal\block\Entity\Block
++   */
++  protected $sut;
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->sut = $this->drupalPlaceBlock('system_local_tasks_block', ['id' => 'tabs_block']);
++  }
+ 
+   /**
+    * Asserts local tasks in the page output.
+@@ -65,6 +86,20 @@ protected function assertLocalTaskAppers($title) {
+   }
+ 
+   /**
++   * Asserts that the local tasks on the specified level are not being printed.
++   *
++   * @param int $level
++   *   (optional) The local tasks level to assert; 0 for primary, 1 for
++   *   secondary. Defaults to 0.
++   */
++  protected function assertNoLocalTasks($level = 0) {
++    $elements = $this->xpath('//*[contains(@class, :class)]//a', array(
++      ':class' => $level == 0 ? 'tabs primary' : 'tabs secondary',
++    ));
++    $this->assertFalse(count($elements), 'Local tasks not found.');
++  }
++
++  /**
+    * Tests the plugin based local tasks.
+    */
+   public function testPluginLocalTask() {
+@@ -171,4 +206,52 @@ public function testPluginLocalTask() {
+     $this->assertEqual('upcasting sub2', (string) $result[0]->a, 'The "upcasting sub2" tab is active.');
+   }
+ 
++  /**
++   * Tests that local task blocks are configurable to show a specific level.
++   */
++  public function testLocalTaskBlock() {
++    // Remove the default block and create a new one.
++    $this->sut->delete();
++
++    $this->sut = $this->drupalPlaceBlock('system_local_tasks_block', [
++      'id' => 'tabs_block',
++      'primary' => TRUE,
++      'secondary' => FALSE,
++    ]);
++
++    $this->drupalGet(Url::fromRoute('menu_test.local_task_test_tasks_settings'));
++
++    // Verify that local tasks in the first level appear.
++    $this->assertLocalTasks([
++      ['menu_test.local_task_test_tasks_view', []],
++      ['menu_test.local_task_test_tasks_edit', []],
++      ['menu_test.local_task_test_tasks_settings', []],
++    ]);
++
++    // Verify that local tasks in the second level doesn't appear.
++    $this->assertNoLocalTasks(1);
++
++    $this->sut->delete();
++    $this->sut = $this->drupalPlaceBlock('system_local_tasks_block', [
++      'id' => 'tabs_block',
++      'primary' => FALSE,
++      'secondary' => TRUE,
++    ]);
++
++    $this->drupalGet(Url::fromRoute('menu_test.local_task_test_tasks_settings'));
++
++    // Verify that local tasks in the first level doesn't appear.
++    $this->assertNoLocalTasks(0);
++
++    // Verify that local tasks in the second level appear.
++    $sub_tasks = [
++      ['menu_test.local_task_test_tasks_settings_sub1', []],
++      ['menu_test.local_task_test_tasks_settings_sub2', []],
++      ['menu_test.local_task_test_tasks_settings_sub3', []],
++      ['menu_test.local_task_test_tasks_settings_derived', ['placeholder' => 'derive1']],
++      ['menu_test.local_task_test_tasks_settings_derived', ['placeholder' => 'derive2']],
++    ];
++    $this->assertLocalTasks($sub_tasks, 1);
++  }
++
+ }
+diff --git a/core/modules/system/src/Tests/Menu/MenuRouterTest.php b/core/modules/system/src/Tests/Menu/MenuRouterTest.php
+index 7fd809d..863a30c 100644
+--- a/core/modules/system/src/Tests/Menu/MenuRouterTest.php
++++ b/core/modules/system/src/Tests/Menu/MenuRouterTest.php
+@@ -43,6 +43,7 @@ protected function setUp() {
+     parent::setUp();
+ 
+     $this->drupalPlaceBlock('system_menu_block:tools');
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/system/src/Tests/Menu/MenuTranslateTest.php b/core/modules/system/src/Tests/Menu/MenuTranslateTest.php
+index e316c95..aadf565 100644
+--- a/core/modules/system/src/Tests/Menu/MenuTranslateTest.php
++++ b/core/modules/system/src/Tests/Menu/MenuTranslateTest.php
+@@ -23,7 +23,16 @@ class MenuTranslateTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('menu_test');
++  public static $modules = ['block', 'menu_test'];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_tasks_block');
++  }
+ 
+   /**
+    * Tests _menu_translate().
+diff --git a/core/modules/system/src/Tests/System/DateTimeTest.php b/core/modules/system/src/Tests/System/DateTimeTest.php
+index 88868e9..b96d48d 100644
+--- a/core/modules/system/src/Tests/System/DateTimeTest.php
++++ b/core/modules/system/src/Tests/System/DateTimeTest.php
+@@ -22,13 +22,14 @@ class DateTimeTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('node', 'language');
++  public static $modules = ['block', 'node', 'language'];
+ 
+   protected function setUp() {
+     parent::setUp();
+ 
+     // Create admin user and log in admin user.
+     $this->drupalLogin ($this->drupalCreateUser(array('administer site configuration')));
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/system/src/Tests/System/ThemeTest.php b/core/modules/system/src/Tests/System/ThemeTest.php
+index 7c85275..7ec499a 100644
+--- a/core/modules/system/src/Tests/System/ThemeTest.php
++++ b/core/modules/system/src/Tests/System/ThemeTest.php
+@@ -30,7 +30,7 @@ class ThemeTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('node', 'block', 'file');
++  public static $modules = ['node', 'block', 'file'];
+ 
+   protected function setUp() {
+     parent::setUp();
+@@ -40,6 +40,7 @@ protected function setUp() {
+     $this->adminUser = $this->drupalCreateUser(array('access administration pages', 'view the administration theme', 'administer themes', 'bypass node access', 'administer blocks'));
+     $this->drupalLogin($this->adminUser);
+     $this->node = $this->drupalCreateNode();
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/system/src/Tests/Update/LocalActionsAndTasksConvertedIntoBlocksUpdateTest.php b/core/modules/system/src/Tests/Update/LocalActionsAndTasksConvertedIntoBlocksUpdateTest.php
+new file mode 100644
+index 0000000..6e5c049
+--- /dev/null
++++ b/core/modules/system/src/Tests/Update/LocalActionsAndTasksConvertedIntoBlocksUpdateTest.php
+@@ -0,0 +1,78 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\system\Tests\Update\LocalActionsAndTasksConvertedIntoBlocksUpdateTest.
++ */
++
++namespace Drupal\system\Tests\Update;
++
++use Drupal\node\Entity\Node;
++
++/**
++ * Tests the upgrade path for local actions/tasks being converted into blocks.
++ *
++ * @see https://www.drupal.org/node/507488
++ *
++ * @group system
++ */
++class LocalActionsAndTasksConvertedIntoBlocksUpdateTest extends UpdatePathTestBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    $this->databaseDumpFiles = [
++      __DIR__ . '/../../../../system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
++      __DIR__ . '/../../../../system/tests/fixtures/update/drupal-8.local-actions-tasks-into-blocks-507488.php',
++    ];
++    parent::setUp();
++  }
++
++  /**
++   * Tests that local actions/tasks are being converted into blocks.
++   */
++  public function testUpdateHookN() {
++    /** @var \Drupal\block\BlockInterface $block_storage */
++    $block_storage = \Drupal::entityManager()->getStorage('block');
++    /* @var \Drupal\block\BlockInterface[] $help_blocks */
++    $help_blocks = $block_storage->loadByProperties(['theme' => 'bartik', 'region' => 'help']);
++
++    $this->runUpdates();
++    $this->assertRaw('Because your site has custom theme(s) installed, we had to set local actions and tasks blocks into the content region. Please manually review the block configurations and remove the removed variables from your templates.');
++
++    // Disable maintenance mode.
++    \Drupal::state()->set('system.maintenance_mode', FALSE);
++
++    // We finished updating so we can login the user now.
++    $this->drupalLogin($this->rootUser);
++
++    $page = Node::create([
++      'type' => 'page',
++      'title' => 'Page node',
++    ]);
++    $page->save();
++
++    // Ensures that blocks inside help region has been moved to content region.
++    foreach ($help_blocks as $block) {
++      $new_block = $block_storage->load($block->id());
++      $this->assertEqual($new_block->getRegion(), 'content');
++    }
++
++    // Local tasks are visible on the node page.
++    $this->drupalGet('node/' . $page->id());
++    $this->assertText(t('Edit'));
++
++    // Local actions are visible on the content listing page.
++    $this->drupalGet('admin/content');
++    $action_link = $this->cssSelect('.action-links');
++    $this->assertTrue($action_link);
++
++    $this->drupalGet('admin/structure/block/list/seven');
++
++    /** @var \Drupal\Core\Config\StorageInterface $config_storage */
++    $config_storage = \Drupal::service('config.storage');
++    $this->assertTrue($config_storage->exists('block.block.test_theme_local_tasks'), 'Local task block has been created for the custom theme.');
++  }
++
++}
+diff --git a/core/modules/system/system.install b/core/modules/system/system.install
+index 042c8f2..0747f38 100644
+--- a/core/modules/system/system.install
++++ b/core/modules/system/system.install
+@@ -1142,6 +1142,11 @@ function system_schema() {
+ }
+ 
+ /**
++ * @addtogroup updates-8.0.0-beta
++ * @{
++ */
++
++/*
+  * Change two fields on the default menu link storage to be serialized data.
+  */
+ function system_update_8001(&$sandbox = NULL) {
+@@ -1203,3 +1208,178 @@ function system_update_8001(&$sandbox = NULL) {
+   }
+ }
+ 
++/**
++ * Place local actions and tasks blocks in every theme.
++ */
++function system_update_8002() {
++  // When block module is not installed, there is nothing that could be done
++  // except showing a warning.
++  if (!\Drupal::moduleHandler()->moduleExists('block')) {
++    return t('Block module is not enabled so local actions and tasks which have been converted to blocks, are not visible anymore.');
++  }
++  $config_factory = \Drupal::configFactory();
++  /** @var \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler */
++  $theme_handler = \Drupal::service('theme_handler');
++  /** @var \Drupal\Core\Config\StorageInterface $config_storage */
++  $config_storage = \Drupal::service('config.storage');
++  $custom_themes_installed = FALSE;
++  $message = NULL;
++
++  $local_actions_default_settings = [
++    'plugin' => 'system_local_actions_block',
++    'region' => 'content',
++    'label' => 'Primary admin actions',
++    'visibility' => [],
++    'weight' => 0,
++    'label_display' => 0,
++    'cache' => [
++      'max_age' => 0,
++    ],
++  ];
++  $tabs_default_settings = [
++    'plugin' => 'system_local_tasks_block',
++    'region' => 'content',
++    'label' => 'Tabs',
++    'visibility' => [],
++    'weight' => 0,
++    'label_display' => 0,
++    'cache' => [
++      'max_age' => 0,
++    ],
++  ];
++  foreach ($theme_handler->listInfo() as $theme) {
++    $theme_name = $theme->getName();
++    $block_storage = \Drupal::entityManager()->getStorage('block');
++    switch ($theme_name) {
++      case 'bartik':
++        if (!$config_storage->exists('block.block.bartik_local_actions')) {
++          $values = [
++            'id' => 'bartik_local_actions',
++            'theme' => 'bartik',
++            'weight' => -1,
++          ] + $local_actions_default_settings;
++          $block_storage->create($values)->save();
++        }
++        if (!$config_storage->exists('block.block.bartik_local_tasks')) {
++          $values = [
++            'id' => 'bartik_local_tasks',
++            'theme' => 'bartik',
++            'weight' => -7,
++          ] + $tabs_default_settings;
++          $block_storage->create($values)->save();
++        }
++
++        // Help region has been removed so all the blocks inside has to be moved
++        // to content region.
++        $weight = -6;
++        $blocks = [];
++        foreach ($config_factory->listAll('block.block.') as $block_config) {
++          $block = $config_factory->getEditable($block_config);
++          if ($block->get('theme') == 'bartik' && $block->get('region') == 'help') {
++            $blocks[] = $block;
++          }
++        }
++        // Sort blocks by block weight.
++        uasort($blocks, function ($a, $b) {
++          return $a->get('weight') - $b->get('weight');
++        });
++        // Move blocks to content region and set them in right order by their
++        // weight.
++        foreach ($blocks as $block) {
++          $block->set('region', 'content');
++          $block->set('weight', $weight++);
++          $block->save();
++        }
++        break;
++
++      case 'seven':
++        if (!$config_storage->exists('block.block.seven_local_actions')) {
++          $values = [
++            'id' => 'seven_local_actions',
++            'theme' => 'seven',
++            'weight' => -10,
++          ] + $local_actions_default_settings;
++          $block_storage->create($values)->save();
++        }
++        if (!$config_storage->exists('block.block.seven_primary_local_tasks')) {
++          $values = [
++            'region' => 'header',
++            'id' => 'seven_primary_local_tasks',
++            'theme' => 'seven',
++            'label' => 'Primary tabs',
++            'settings' => [
++              'primary' => TRUE,
++              'secondary' => FALSE,
++            ],
++          ] + $tabs_default_settings;
++          $block_storage->create($values)->save();
++        }
++
++        if (!$config_storage->exists('block.block.seven_secondary_local_tasks')) {
++          $values = [
++            'region' => 'pre_content',
++            'id' => 'seven_secondary_local_tasks',
++            'theme' => 'seven',
++            'label' => 'Secondary tabs',
++            'settings' => [
++              'primary' => FALSE,
++              'secondary' => TRUE,
++            ],
++          ] + $tabs_default_settings;
++          $block_storage->create($values)->save();
++        }
++        break;
++
++      case 'stark':
++        if (!$config_storage->exists('block.block.stark_local_actions')) {
++          $values = [
++            'id' => 'stark_local_actions',
++            'theme' => 'stark',
++          ] + $local_actions_default_settings;
++          $block_storage->create($values)->save();
++        }
++        if (!$config_storage->exists('block.block.stark_local_tasks')) {
++          $values = [
++            'id' => 'stark_local_tasks',
++            'theme' => 'stark',
++          ] + $tabs_default_settings;
++          $block_storage->create($values)->save();
++        }
++        break;
++
++      case 'classy':
++        // Don't place any blocks or trigger custom themes installed warning.
++        break;
++
++      default:
++        $custom_themes_installed = TRUE;
++        if (!$config_storage->exists(sprintf('block.block.%s_local_actions', $theme_name))) {
++          $values = [
++            'id' => sprintf('%s_local_actions', $theme_name),
++            'theme' => $theme_name,
++            'weight' => -10,
++          ] + $local_actions_default_settings;
++          $block_storage->create($values)->save();
++        }
++        if (!$config_storage->exists(sprintf('block.block.%s_local_tasks', $theme_name))) {
++          $values = [
++            'id' => sprintf('%s_local_tasks', $theme_name),
++            'theme' => $theme_name,
++            'weight' => -20,
++          ] + $tabs_default_settings;
++          $block_storage->create($values)->save();
++        }
++        break;
++    }
++  }
++
++  if ($custom_themes_installed) {
++    $message = t('Because your site has custom theme(s) installed, we had to set local actions and tasks blocks into the content region. Please manually review the block configurations and remove the removed variables from your templates.');
++  }
++
++  return $message;
++}
++
++/**
++ * @} End of "addtogroup updates-8.0.0-beta".
++ */
+diff --git a/core/modules/system/system.module b/core/modules/system/system.module
+index 027ba8b..d2163c7 100644
+--- a/core/modules/system/system.module
++++ b/core/modules/system/system.module
+@@ -810,6 +810,14 @@ function system_preprocess_block(&$variables) {
+       }
+       break;
+ 
++    case 'system_local_actions_block':
++      $variables['content'] = $variables['content']['local_actions'];
++      break;
++
++    case 'system_local_tasks_block':
++      $variables['content'] = $variables['content']['tabs'];
++      break;
++
+     case 'system_powered_by_block':
+       $variables['attributes']['role'] = 'complementary';
+       break;
+diff --git a/core/modules/system/templates/page.html.twig b/core/modules/system/templates/page.html.twig
+index c5a3711..b80310e 100644
+--- a/core/modules/system/templates/page.html.twig
++++ b/core/modules/system/templates/page.html.twig
+@@ -32,10 +32,6 @@
+  * - title_suffix: Additional output populated by modules, intended to be
+  *   displayed after the main title tag that appears in the template.
+  * - messages: Status and error messages. Should be displayed prominently.
+- * - tabs: Tabs linking to any sub-pages beneath the current page (e.g., the
+- *   view and edit tabs when displaying a node).
+- * - action_links: Actions local to the page, such as "Add menu" on the menu
+- *   administration interface.
+  * - node: Fully loaded node, if there is an automatically-loaded node
+  *   associated with the page and the node ID is the second argument in the
+  *   page's path (e.g. node/12345 and node/12345/revisions, but not
+@@ -110,13 +106,6 @@
+         <h1>{{ title }}</h1>
+       {% endif %}
+       {{ title_suffix }}
+-
+-      {{ tabs }}
+-
+-      {% if action_links %}
+-        <nav class="action-links">{{ action_links }}</nav>
+-      {% endif %}
+-
+       {{ page.content }}
+     </div>{# /.layout-content #}
+ 
+diff --git a/core/modules/system/tests/fixtures/update/block.block.testfor507488.yml b/core/modules/system/tests/fixtures/update/block.block.testfor507488.yml
+new file mode 100644
+index 0000000..624c9e8
+--- /dev/null
++++ b/core/modules/system/tests/fixtures/update/block.block.testfor507488.yml
+@@ -0,0 +1,23 @@
++uuid: ee7c230c-337b-4e8f-8600-d65bfd34f171
++langcode: en
++status: true
++dependencies:
++  module:
++    - system
++  theme:
++    - seven
++id: seven_local_actions
++theme: seven
++region: content
++weight: -10
++provider: null
++plugin: system_local_actions_block
++settings:
++  id: system_local_actions_block
++  label: 'Primary admin actions'
++  provider: system
++  label_display: '0'
++  cache:
++    max_age: 0
++  status: true
++visibility: {  }
+diff --git a/core/modules/system/tests/fixtures/update/drupal-8.local-actions-tasks-into-blocks-507488.php b/core/modules/system/tests/fixtures/update/drupal-8.local-actions-tasks-into-blocks-507488.php
+new file mode 100644
+index 0000000..986362f
+--- /dev/null
++++ b/core/modules/system/tests/fixtures/update/drupal-8.local-actions-tasks-into-blocks-507488.php
+@@ -0,0 +1,60 @@
++<?php
++
++/**
++ * @file
++ * Contains database additions to drupal-8.bare.standard.php.gz for testing the
++ * upgrade path of https://www.drupal.org/node/507488.
++ */
++
++use Drupal\Core\Database\Database;
++
++$connection = Database::getConnection();
++
++// Structure of a custom block with visibility settings.
++$block_configs[] = \Drupal\Component\Serialization\Yaml::decode(file_get_contents(__DIR__ . '/block.block.testfor507488.yml'));
++
++foreach ($block_configs as $block_config) {
++  $connection->insert('config')
++    ->fields([
++      'collection',
++      'name',
++      'data',
++    ])
++    ->values([
++      'collection' => '',
++      'name' => 'block.block.' . $block_config['id'],
++      'data' => serialize($block_config),
++    ])
++    ->execute();
++}
++
++// Update the config entity query "index".
++$existing_blocks = $connection->select('key_value')
++    ->fields('key_value', ['value'])
++    ->condition('collection', 'config.entity.key_store.block')
++    ->condition('name', 'theme:seven')
++    ->execute()
++    ->fetchField();
++$existing_blocks = unserialize($existing_blocks);
++
++$connection->update('key_value')
++  ->fields([
++    'value' => serialize(array_merge($existing_blocks, ['block.block.seven_local_actions']))
++  ])
++  ->condition('collection', 'config.entity.key_store.block')
++  ->condition('name', 'theme:seven')
++  ->execute();
++
++// Enable test theme.
++$extensions = $connection->select('config')
++  ->fields('config', ['data'])
++  ->condition('name', 'core.extension')
++  ->execute()
++  ->fetchField();
++$extensions = unserialize($extensions);
++$connection->update('config')
++  ->fields([
++    'data' => serialize(array_merge_recursive($extensions, ['theme' => ['test_theme' => 0]]))
++  ])
++  ->condition('name', 'core.extension')
++  ->execute();
+diff --git a/core/modules/taxonomy/src/Tests/TermTest.php b/core/modules/taxonomy/src/Tests/TermTest.php
+index 09a0de2..66fa145 100644
+--- a/core/modules/taxonomy/src/Tests/TermTest.php
++++ b/core/modules/taxonomy/src/Tests/TermTest.php
+@@ -35,8 +35,22 @@ class TermTest extends TaxonomyTestBase {
+    */
+   protected $field;
+ 
++  /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block'];
++
++  /**
++   * {@inheritdoc}
++   */
+   protected function setUp() {
+     parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_actions_block');
++    $this->drupalPlaceBlock('system_local_tasks_block');
++
+     $this->drupalLogin($this->drupalCreateUser(['administer taxonomy', 'bypass node access']));
+     $this->vocabulary = $this->createVocabulary();
+ 
+@@ -308,10 +322,7 @@ function testTermInterface() {
+     // Submitting a term takes us to the add page; we need the List page.
+     $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/overview');
+ 
+-    // Test edit link as accessed from Taxonomy administration pages.
+-    // Because Simpletest creates its own database when running tests, we know
+-    // the first edit link found on the listing page is to our term.
+-    $this->clickLink(t('Edit'), 1);
++    $this->clickLink(t('Edit'));
+ 
+     $this->assertRaw($edit['name[0][value]'], 'The randomly generated term name is present.');
+     $this->assertText($edit['description[0][value]'], 'The randomly generated term description is present.');
+diff --git a/core/modules/taxonomy/src/Tests/VocabularyUiTest.php b/core/modules/taxonomy/src/Tests/VocabularyUiTest.php
+index 3a34c2e..69eba32 100644
+--- a/core/modules/taxonomy/src/Tests/VocabularyUiTest.php
++++ b/core/modules/taxonomy/src/Tests/VocabularyUiTest.php
+@@ -29,6 +29,7 @@ protected function setUp() {
+     parent::setUp();
+     $this->drupalLogin($this->drupalCreateUser(['administer taxonomy']));
+     $this->vocabulary = $this->createVocabulary();
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/tour/src/Tests/TourTest.php b/core/modules/tour/src/Tests/TourTest.php
+index 8ed261c..582e6d4 100644
+--- a/core/modules/tour/src/Tests/TourTest.php
++++ b/core/modules/tour/src/Tests/TourTest.php
+@@ -21,7 +21,7 @@ class TourTest extends TourTestBasic {
+    *
+    * @var array
+    */
+-  public static $modules = array('tour', 'locale', 'language', 'tour_test');
++  public static $modules = ['block', 'tour', 'locale', 'language', 'tour_test'];
+ 
+   /**
+    * The permissions required for a logged in user to test tour tips.
+@@ -42,6 +42,18 @@ class TourTest extends TourTestBasic {
+   );
+ 
+   /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++
++    $this->drupalPlaceBlock('system_local_actions_block', [
++      'theme' => 'seven',
++      'region' => 'content'
++    ]);
++  }
++
++  /**
+    * Test tour functionality.
+    */
+   public function testTourFunctionality() {
+diff --git a/core/modules/tracker/src/Tests/TrackerTest.php b/core/modules/tracker/src/Tests/TrackerTest.php
+index c57f1c9..611719b 100644
+--- a/core/modules/tracker/src/Tests/TrackerTest.php
++++ b/core/modules/tracker/src/Tests/TrackerTest.php
+@@ -31,7 +31,7 @@ class TrackerTest extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('comment', 'tracker', 'history', 'node_test');
++  public static $modules = ['block', 'comment', 'tracker', 'history', 'node_test'];
+ 
+   /**
+    * The main user for testing.
+@@ -60,6 +60,8 @@ protected function setUp() {
+       'access content',
+       'access user profiles',
+     ));
++    $this->drupalPlaceBlock('system_local_tasks_block', ['id' => 'page_tabs_block']);
++    $this->drupalPlaceBlock('system_local_actions_block', ['id' => 'page_actions_block']);
+   }
+ 
+   /**
+@@ -83,10 +85,18 @@ function testTrackerAll() {
+     $this->assertLink(t('My recent content'), 0, 'User tab shows up on the global tracker page.');
+ 
+     // Assert cache contexts, specifically the pager and node access contexts.
+-    $this->assertCacheContexts(['languages:language_interface', 'theme', 'url.query_args.pagers:0', 'user.node_grants:view', 'user.permissions']);
++    $this->assertCacheContexts(['languages:language_interface', 'route.name', 'theme', 'url.query_args.pagers:0', 'user.node_grants:view', 'user']);
+     // Assert cache tags for the visible node and node list cache tag.
+     $expected_tags = Cache::mergeTags($published->getCacheTags(), $published->getOwner()->getCacheTags());
+-    $expected_tags = Cache::mergeTags($expected_tags, ['node_list', 'rendered']);
++    $additional_cache_tags = [
++      'node_list',
++      'rendered',
++      'block_view',
++      'config:block.block.page_actions_block',
++      'config:block.block.page_tabs_block',
++      'config:block_list',
++    ];
++    $expected_tags = Cache::mergeTags($expected_tags, $additional_cache_tags);
+     $this->assertCacheTags($expected_tags);
+ 
+     // Delete a node and ensure it no longer appears on the tracker.
+@@ -149,16 +159,24 @@ function testTrackerUser() {
+     $this->assertText($other_published_my_comment->label(), "Nodes that the user has commented on appear in the user's tracker listing.");
+ 
+     // Assert cache contexts.
+-    $this->assertCacheContexts(['languages:language_interface', 'theme', 'url.query_args.pagers:0', 'user', 'user.node_grants:view']);
++    $this->assertCacheContexts(['languages:language_interface', 'route.name', 'theme', 'url.query_args.pagers:0', 'user', 'user.node_grants:view']);
+     // Assert cache tags for the visible nodes (including owners) and node list
+     // cache tag.
+     $expected_tags = Cache::mergeTags($my_published->getCacheTags(), $my_published->getOwner()->getCacheTags());
+     $expected_tags = Cache::mergeTags($expected_tags, $other_published_my_comment->getCacheTags());
+     $expected_tags = Cache::mergeTags($expected_tags, $other_published_my_comment->getOwner()->getCacheTags());
+-    $expected_tags = Cache::mergeTags($expected_tags, ['node_list', 'rendered']);
++    $additional_cache_tags = [
++      'node_list',
++      'rendered',
++      'block_view',
++      'config:block.block.page_actions_block',
++      'config:block.block.page_tabs_block',
++      'config:block_list',
++    ];
++    $expected_tags = Cache::mergeTags($expected_tags, $additional_cache_tags);
+ 
+     $this->assertCacheTags($expected_tags);
+-    $this->assertCacheContexts(['languages:language_interface', 'theme', 'url.query_args.pagers:0', 'user', 'user.node_grants:view']);
++    $this->assertCacheContexts(['languages:language_interface', 'route.name', 'theme', 'url.query_args.pagers:0', 'user', 'user.node_grants:view']);
+ 
+     $this->assertLink($my_published->label());
+     $this->assertNoLink($unpublished->label());
+diff --git a/core/modules/update/src/Tests/UpdateCoreTest.php b/core/modules/update/src/Tests/UpdateCoreTest.php
+index aef7c5e..3222340 100644
+--- a/core/modules/update/src/Tests/UpdateCoreTest.php
++++ b/core/modules/update/src/Tests/UpdateCoreTest.php
+@@ -22,12 +22,13 @@ class UpdateCoreTest extends UpdateTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array('update_test', 'update', 'language');
++  public static $modules = ['update_test', 'update', 'language', 'block'];
+ 
+   protected function setUp() {
+     parent::setUp();
+     $admin_user = $this->drupalCreateUser(array('administer site configuration', 'administer modules', 'administer themes'));
+     $this->drupalLogin($admin_user);
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+   /**
+diff --git a/core/modules/user/src/Tests/UserRoleAdminTest.php b/core/modules/user/src/Tests/UserRoleAdminTest.php
+index 455d6f7..533e6bf 100644
+--- a/core/modules/user/src/Tests/UserRoleAdminTest.php
++++ b/core/modules/user/src/Tests/UserRoleAdminTest.php
+@@ -25,9 +25,20 @@ class UserRoleAdminTest extends WebTestBase {
+    */
+   protected $adminUser;
+ 
++  /**
++   * Modules to enable.
++   *
++   * @var string[]
++   */
++  public static $modules = ['block'];
++
++  /**
++   * {@inheritdoc}
++   */
+   protected function setUp() {
+     parent::setUp();
+     $this->adminUser = $this->drupalCreateUser(array('administer permissions', 'administer users'));
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+diff --git a/core/modules/views/src/Tests/Plugin/DisplayPageWebTest.php b/core/modules/views/src/Tests/Plugin/DisplayPageWebTest.php
+index 31bfd3c..83bf412 100644
+--- a/core/modules/views/src/Tests/Plugin/DisplayPageWebTest.php
++++ b/core/modules/views/src/Tests/Plugin/DisplayPageWebTest.php
+@@ -33,10 +33,14 @@ class DisplayPageWebTest extends PluginTestBase {
+    */
+   public static $modules = ['menu_ui', 'block'];
+ 
++  /**
++   * {@inheritdoc}
++   */
+   protected function setUp() {
+     parent::setUp();
+ 
+     $this->enableViewsTestModule();
++    $this->drupalPlaceBlock('system_local_tasks_block');
+   }
+ 
+   /**
+@@ -53,7 +57,7 @@ public function testArguments() {
+ 
+     $this->drupalGet('test_route_with_argument/1');
+     $this->assertResponse(200);
+-    $this->assertCacheContexts(['languages:language_interface', 'theme', 'url']);
++    $this->assertCacheContexts(['languages:language_interface', 'route.name', 'theme', 'url']);
+     $result = $this->xpath('//span[@class="field-content"]');
+     $this->assertEqual(count($result), 1, 'Ensure that just the filtered entry was returned.');
+     $this->assertEqual((string) $result[0], 1, 'The passed ID was returned.');
+diff --git a/core/modules/views/src/Tests/Wizard/WizardTestBase.php b/core/modules/views/src/Tests/Wizard/WizardTestBase.php
+index f610a5f..85f79e8 100644
+--- a/core/modules/views/src/Tests/Wizard/WizardTestBase.php
++++ b/core/modules/views/src/Tests/Wizard/WizardTestBase.php
+@@ -27,6 +27,7 @@ protected function setUp() {
+     // Create and log in a user with administer views permission.
+     $views_admin = $this->drupalCreateUser(array('administer views', 'administer blocks', 'bypass node access', 'access user profiles', 'view all revisions'));
+     $this->drupalLogin($views_admin);
++    $this->drupalPlaceBlock('system_local_actions_block');
+   }
+ 
+ }
+diff --git a/core/modules/views_ui/src/Tests/SettingsTest.php b/core/modules/views_ui/src/Tests/SettingsTest.php
+index 262fc7a..43bbc9b 100644
+--- a/core/modules/views_ui/src/Tests/SettingsTest.php
++++ b/core/modules/views_ui/src/Tests/SettingsTest.php
+@@ -22,6 +22,14 @@ class SettingsTest extends UITestBase {
+   protected $adminUser;
+ 
+   /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++    $this->drupalPlaceBlock('system_local_tasks_block');
++  }
++
++  /**
+    * Tests the settings for the edit ui.
+    */
+   function testEditUI() {
+diff --git a/core/profiles/minimal/config/install/block.block.stark_local_actions.yml b/core/profiles/minimal/config/install/block.block.stark_local_actions.yml
+new file mode 100644
+index 0000000..aed4cad
+--- /dev/null
++++ b/core/profiles/minimal/config/install/block.block.stark_local_actions.yml
+@@ -0,0 +1,18 @@
++id: stark_local_actions
++theme: stark
++weight: -10
++status: true
++langcode: en
++region: content
++plugin: system_local_actions_block
++settings:
++  id: system_local_actions_block
++  label: Primary admin actions
++  provider: system
++  label_display: '0'
++dependencies:
++  module:
++    - system
++  theme:
++    - stark
++visibility: {  }
+diff --git a/core/profiles/minimal/config/install/block.block.stark_local_tasks.yml b/core/profiles/minimal/config/install/block.block.stark_local_tasks.yml
+new file mode 100644
+index 0000000..1d7d1b7
+--- /dev/null
++++ b/core/profiles/minimal/config/install/block.block.stark_local_tasks.yml
+@@ -0,0 +1,18 @@
++id: stark_local_tasks
++theme: stark
++weight: -20
++status: true
++langcode: en
++region: content
++plugin: system_local_tasks_block
++settings:
++  id: system_local_tasks_block
++  label: Tabs
++  provider: system
++  label_display: '0'
++dependencies:
++  module:
++    - system
++  theme:
++    - stark
++visibility: {  }
+diff --git a/core/profiles/standard/config/install/block.block.bartik_help.yml b/core/profiles/standard/config/install/block.block.bartik_help.yml
+index 88c4f1a..e93a546 100644
+--- a/core/profiles/standard/config/install/block.block.bartik_help.yml
++++ b/core/profiles/standard/config/install/block.block.bartik_help.yml
+@@ -1,9 +1,9 @@
+ id: bartik_help
+ theme: bartik
+-weight: 0
++weight: -30
+ status: true
+ langcode: en
+-region: help
++region: content
+ plugin: help_block
+ settings:
+   id: help_block
+diff --git a/core/profiles/standard/config/install/block.block.bartik_local_actions.yml b/core/profiles/standard/config/install/block.block.bartik_local_actions.yml
+new file mode 100644
+index 0000000..42aef3f
+--- /dev/null
++++ b/core/profiles/standard/config/install/block.block.bartik_local_actions.yml
+@@ -0,0 +1,18 @@
++id: bartik_local_actions
++theme: bartik
++weight: -20
++status: true
++langcode: en
++region: content
++plugin: system_local_actions_block
++settings:
++  id: system_local_actions_block
++  label: Primary admin actions
++  provider: system
++  label_display: '0'
++dependencies:
++  module:
++    - system
++  theme:
++    - bartik
++visibility: {  }
+diff --git a/core/profiles/standard/config/install/block.block.bartik_local_tasks.yml b/core/profiles/standard/config/install/block.block.bartik_local_tasks.yml
+new file mode 100644
+index 0000000..532a1e3
+--- /dev/null
++++ b/core/profiles/standard/config/install/block.block.bartik_local_tasks.yml
+@@ -0,0 +1,18 @@
++id: bartik_local_tasks
++theme: bartik
++weight: -40
++status: true
++langcode: en
++region: content
++plugin: system_local_tasks_block
++settings:
++  id: system_local_tasks_block
++  label: Tabs
++  provider: system
++  label_display: '0'
++dependencies:
++  module:
++    - system
++  theme:
++    - bartik
++visibility: {  }
+diff --git a/core/profiles/standard/config/install/block.block.seven_local_actions.yml b/core/profiles/standard/config/install/block.block.seven_local_actions.yml
+new file mode 100644
+index 0000000..9577c20
+--- /dev/null
++++ b/core/profiles/standard/config/install/block.block.seven_local_actions.yml
+@@ -0,0 +1,18 @@
++id: seven_local_actions
++theme: seven
++weight: -10
++status: true
++langcode: en
++region: content
++plugin: system_local_actions_block
++settings:
++  id: system_local_actions_block
++  label: Primary admin actions
++  provider: system
++  label_display: '0'
++dependencies:
++  module:
++    - system
++  theme:
++    - seven
++visibility: {  }
+diff --git a/core/profiles/standard/config/install/block.block.seven_primary_local_tasks.yml b/core/profiles/standard/config/install/block.block.seven_primary_local_tasks.yml
+new file mode 100644
+index 0000000..4899cf1
+--- /dev/null
++++ b/core/profiles/standard/config/install/block.block.seven_primary_local_tasks.yml
+@@ -0,0 +1,20 @@
++id: seven_primary_local_tasks
++theme: seven
++weight: 0
++status: true
++langcode: en
++region: header
++plugin: system_local_tasks_block
++settings:
++  id: system_local_tasks_block
++  label: Primary tabs
++  provider: system
++  label_display: '0'
++  primary: true
++  secondary: false
++dependencies:
++  module:
++    - system
++  theme:
++    - seven
++visibility: {  }
+diff --git a/core/profiles/standard/config/install/block.block.seven_seconadry_local_tasks.yml b/core/profiles/standard/config/install/block.block.seven_seconadry_local_tasks.yml
+new file mode 100644
+index 0000000..cc83531
+--- /dev/null
++++ b/core/profiles/standard/config/install/block.block.seven_seconadry_local_tasks.yml
+@@ -0,0 +1,20 @@
++id: seven_secondary_local_tasks
++theme: seven
++weight: 0
++status: true
++langcode: en
++region: pre_content
++plugin: system_local_tasks_block
++settings:
++  id: system_local_tasks_block
++  label: Secondary tabs
++  provider: system
++  label_display: '0'
++  primary: false
++  secondary: true
++dependencies:
++  module:
++    - system
++  theme:
++    - seven
++visibility: {  }
+diff --git a/core/tests/Drupal/Tests/Core/Menu/LocalActionManagerTest.php b/core/tests/Drupal/Tests/Core/Menu/LocalActionManagerTest.php
+index 85731c7..24a09f2 100644
+--- a/core/tests/Drupal/Tests/Core/Menu/LocalActionManagerTest.php
++++ b/core/tests/Drupal/Tests/Core/Menu/LocalActionManagerTest.php
+@@ -10,6 +10,8 @@
+ use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
+ use Drupal\Component\Plugin\Factory\FactoryInterface;
+ use Drupal\Core\Access\AccessManagerInterface;
++use Drupal\Core\Access\AccessResult;
++use Drupal\Core\Access\AccessResultForbidden;
+ use Drupal\Core\Cache\CacheBackendInterface;
+ use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\Core\Language\Language;
+@@ -109,10 +111,11 @@ protected function setUp() {
+     $this->moduleHandler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
+     $this->cacheBackend = $this->getMock('Drupal\Core\Cache\CacheBackendInterface');
+ 
++    $access_result = new AccessResultForbidden();
+     $this->accessManager = $this->getMock('Drupal\Core\Access\AccessManagerInterface');
+     $this->accessManager->expects($this->any())
+       ->method('checkNamedRoute')
+-      ->will($this->returnValue(FALSE));
++      ->willReturn($access_result);
+     $this->account = $this->getMock('Drupal\Core\Session\AccountInterface');
+     $this->discovery = $this->getMock('Drupal\Component\Plugin\Discovery\DiscoveryInterface');
+     $this->factory = $this->getMock('Drupal\Component\Plugin\Factory\FactoryInterface');
+@@ -202,7 +205,7 @@ public function getActionsForRouteProvider() {
+             'url' => Url::fromRoute('test_route_2'),
+             'localized_options' => '',
+           ),
+-          '#access' => FALSE,
++          '#access' => AccessResult::forbidden(),
+           '#weight' => 0,
+         ),
+       ),
+@@ -236,7 +239,7 @@ public function getActionsForRouteProvider() {
+             'url' => Url::fromRoute('test_route_2'),
+             'localized_options' => '',
+           ),
+-          '#access' => FALSE,
++          '#access' => AccessResult::forbidden(),
+           '#weight' => 0,
+         ),
+       ),
+@@ -271,7 +274,7 @@ public function getActionsForRouteProvider() {
+             'url' => Url::fromRoute('test_route_2'),
+             'localized_options' => '',
+           ),
+-          '#access' => FALSE,
++          '#access' => AccessResult::forbidden(),
+           '#weight' => 1,
+         ),
+         'plugin_id_2' => array(
+@@ -281,7 +284,7 @@ public function getActionsForRouteProvider() {
+             'url' => Url::fromRoute('test_route_3'),
+             'localized_options' => '',
+           ),
+-          '#access' => FALSE,
++          '#access' => AccessResult::forbidden(),
+           '#weight' => 0,
+         ),
+       ),
+@@ -318,7 +321,7 @@ public function getActionsForRouteProvider() {
+             'url' => Url::fromRoute('test_route_2', ['test1']),
+             'localized_options' => '',
+           ),
+-          '#access' => FALSE,
++          '#access' => AccessResult::forbidden(),
+           '#weight' => 1,
+         ),
+         'plugin_id_2' => array(
+@@ -328,7 +331,7 @@ public function getActionsForRouteProvider() {
+             'url' => Url::fromRoute('test_route_2', ['test2']),
+             'localized_options' => '',
+           ),
+-          '#access' => FALSE,
++          '#access' => AccessResult::forbidden(),
+           '#weight' => 0,
+         ),
+       ),
+diff --git a/core/themes/bartik/bartik.info.yml b/core/themes/bartik/bartik.info.yml
+index fb8f2fb..68cc5fe 100644
+--- a/core/themes/bartik/bartik.info.yml
++++ b/core/themes/bartik/bartik.info.yml
+@@ -18,7 +18,6 @@ regions:
+   header: Header
+   primary_menu: 'Primary menu'
+   secondary_menu: 'Secondary menu'
+-  help: Help
+   page_top: 'Page top'
+   page_bottom: 'Page bottom'
+   highlighted: Highlighted
+diff --git a/core/themes/bartik/bartik.libraries.yml b/core/themes/bartik/bartik.libraries.yml
+index 009a67f..41cb460 100644
+--- a/core/themes/bartik/bartik.libraries.yml
++++ b/core/themes/bartik/bartik.libraries.yml
+@@ -19,7 +19,7 @@ global-styling:
+       css/components/form.css: {}
+       css/components/forum.css: {}
+       css/components/header.css: {}
+-      css/components/region-help.css: {}
++      css/components/help.css: {}
+       css/components/item-list.css: {}
+       css/components/list-group.css: {}
+       css/components/node-preview.css: {}
+diff --git a/core/themes/bartik/css/components/help.css b/core/themes/bartik/css/components/help.css
+new file mode 100644
+index 0000000..c606992
+--- /dev/null
++++ b/core/themes/bartik/css/components/help.css
+@@ -0,0 +1,10 @@
++/**
++ * @file
++ * Styles for the help block.
++ */
++
++.block-help {
++  border: 1px solid #d3d7d9;
++  padding: 0 1.5em;
++  margin-bottom: 30px;
++}
+diff --git a/core/themes/bartik/css/components/region-help.css b/core/themes/bartik/css/components/region-help.css
+deleted file mode 100644
+index 3c16b0d..0000000
+--- a/core/themes/bartik/css/components/region-help.css
++++ /dev/null
+@@ -1,10 +0,0 @@
+-/**
+- * @file
+- * Styles for the help region.
+- */
+-
+-.region-help {
+-  border: 1px solid #d3d7d9;
+-  padding: 0 1.5em;
+-  margin-bottom: 30px;
+-}
+diff --git a/core/themes/bartik/templates/page.html.twig b/core/themes/bartik/templates/page.html.twig
+index d1ba506..f3da885 100644
+--- a/core/themes/bartik/templates/page.html.twig
++++ b/core/themes/bartik/templates/page.html.twig
+@@ -38,10 +38,6 @@
+  * - title: The page title, for use in the actual content.
+  * - title_suffix: Additional output populated by modules, intended to be
+  *   displayed after the main title tag that appears in the template.
+- * - tabs: Tabs linking to any sub-pages beneath the current page (e.g., the
+- *   view and edit tabs when displaying a node).
+- * - action_links: Actions local to the page, such as "Add menu" on the menu
+- *   administration interface.
+  * - node: Fully loaded node, if there is an automatically-loaded node
+  *   associated with the page and the node ID is the second argument in the
+  *   page's path (e.g. node/12345 and node/12345/revisions, but not
+@@ -53,7 +49,6 @@
+  * - page.primary_menu: Items for the primary menu region.
+  * - page.secondary_menu: Items for the secondary menu region.
+  * - page.featured_top: Items for the featured top region.
+- * - page.help: Dynamic help text, mostly for admin pages.
+  * - page.content: The main content of the current page.
+  * - page.sidebar_first: Items for the first sidebar.
+  * - page.sidebar_second: Items for the second sidebar.
+@@ -136,15 +131,6 @@
+               </h1>
+             {% endif %}
+             {{ title_suffix }}
+-            {% if tabs %}
+-              <nav class="tabs" role="navigation" aria-label="{{ 'Tabs'|t }}">
+-                {{ tabs }}
+-              </nav>
+-            {% endif %}
+-            {{ page.help }}
+-            {% if action_links %}
+-              <ul class="action-links">{{ action_links }}</ul>
+-            {% endif %}
+             {{ page.content }}
+           </section>
+         </main>
+diff --git a/core/themes/classy/templates/block/block--system-local-actions-block.html.twig b/core/themes/classy/templates/block/block--system-local-actions-block.html.twig
+new file mode 100644
+index 0000000..2a0f5c4
+--- /dev/null
++++ b/core/themes/classy/templates/block/block--system-local-actions-block.html.twig
+@@ -0,0 +1,12 @@
++{% extends "@block/block.html.twig" %}
++{#
++/**
++ * @file
++ * Theme override for local actions (primary admin actions.)
++ */
++#}
++{% block content %}
++  {% if content %}
++    <nav class="action-links">{{ content }}</nav>
++  {% endif %}
++{% endblock %}
+diff --git a/core/themes/classy/templates/block/block--system-local-tasks-block.html.twig b/core/themes/classy/templates/block/block--system-local-tasks-block.html.twig
+new file mode 100644
+index 0000000..a191c60
+--- /dev/null
++++ b/core/themes/classy/templates/block/block--system-local-tasks-block.html.twig
+@@ -0,0 +1,14 @@
++{% extends "@block/block.html.twig" %}
++{#
++/**
++ * @file
++ * Theme override for tabs.
++ */
++#}
++{% block content %}
++  {% if content %}
++    <nav class="tabs" role="navigation" aria-label="{{ 'Tabs'|t }}">
++      {{ content }}
++    </nav>
++  {% endif %}
++{% endblock %}
+diff --git a/core/themes/classy/templates/layout/page.html.twig b/core/themes/classy/templates/layout/page.html.twig
+index 57533c8..8c81950 100644
+--- a/core/themes/classy/templates/layout/page.html.twig
++++ b/core/themes/classy/templates/layout/page.html.twig
+@@ -31,10 +31,6 @@
+  * - title: The page title, for use in the actual content.
+  * - title_suffix: Additional output populated by modules, intended to be
+  *   displayed after the main title tag that appears in the template.
+- * - tabs: Tabs linking to any sub-pages beneath the current page (e.g., the
+- *   view and edit tabs when displaying a node).
+- * - action_links: Actions local to the page, such as "Add menu" on the menu
+- *   administration interface.
+  * - node: Fully loaded node, if there is an automatically-loaded node
+  *   associated with the page and the node ID is the second argument in the
+  *   page's path (e.g. node/12345 and node/12345/revisions, but not
+@@ -109,13 +105,6 @@
+         <h1>{{ title }}</h1>
+       {% endif %}
+       {{ title_suffix }}
+-
+-      {{ tabs }}
+-
+-      {% if action_links %}
+-        <nav class="action-links">{{ action_links }}</nav>
+-      {% endif %}
+-
+       {{ page.content }}
+     </div>{# /.layout-content #}
+ 
+diff --git a/core/themes/seven/seven.info.yml b/core/themes/seven/seven.info.yml
+index 99a3ec1..1427896 100644
+--- a/core/themes/seven/seven.info.yml
++++ b/core/themes/seven/seven.info.yml
+@@ -14,12 +14,14 @@ stylesheets-remove:
+ quickedit_stylesheets:
+   - css/components/quickedit.css
+ regions:
+-  content: Content
++  header: 'Header'
++  pre_content: 'Pre-content'
++  breadcrumb: Breadcrumb
+   highlighted: Highlighted
+   help: Help
++  content: Content
+   page_top: 'Page top'
+   page_bottom: 'Page bottom'
+   sidebar_first: 'First sidebar'
+-  breadcrumb: Breadcrumb
+ regions_hidden:
+   - sidebar_first
+diff --git a/core/themes/seven/seven.theme b/core/themes/seven/seven.theme
+index b508d94..fc677de 100644
+--- a/core/themes/seven/seven.theme
++++ b/core/themes/seven/seven.theme
+@@ -25,18 +25,6 @@ function seven_preprocess_html(&$variables) {
+ }
+ 
+ /**
+- * Implements hook_preprocess_HOOK() for page templates.
+- */
+-function seven_preprocess_page(&$variables) {
+-  $variables['primary_local_tasks'] = $variables['tabs'];
+-  unset($variables['primary_local_tasks']['#secondary']);
+-  $variables['secondary_local_tasks'] = array(
+-    '#theme' => 'menu_local_tasks',
+-    '#secondary' => isset($variables['tabs']['#secondary']) ? $variables['tabs']['#secondary'] : '',
+-  );
+-}
+-
+-/**
+  * Implements hook_pre_render_HOOK() for menu-local-tasks templates.
+  *
+  * Use preprocess hook to set #attached to child elements
+diff --git a/core/themes/seven/templates/page.html.twig b/core/themes/seven/templates/page.html.twig
+index 1c36be5..ac26a51 100644
+--- a/core/themes/seven/templates/page.html.twig
++++ b/core/themes/seven/templates/page.html.twig
+@@ -32,24 +32,18 @@
+  * - title: The page title, for use in the actual content.
+  * - title_suffix: Additional output populated by modules, intended to be
+  *   displayed after the main title tag that appears in the template.
+- * - tabs: Tabs linking to any sub-pages beneath the current page (e.g., the
+- *   view and edit tabs when displaying a node).
+- * - action_links: Actions local to the page, such as "Add menu" on the menu
+- *   administration interface.
+  * - node: Fully loaded node, if there is an automatically-loaded node
+  *   associated with the page and the node ID is the second argument in the
+  *   page's path (e.g. node/12345 and node/12345/revisions, but not
+  *   comment/reply/12345).
+  *
+  * Regions:
+- * - page.page_top: Items for the header region.
++ * - page.header: Items for the header region.
++ * - page.pre_content: Items for the pre-content region.
++ * - page.breadcrumb: Items for the breadcrumb region.
+  * - page.highlighted: Items for the highlighted region.
+  * - page.help: Dynamic help text, mostly for admin pages.
+  * - page.content: The main content of the current page.
+- * - page.sidebar_first: Items for the first sidebar.
+- * - page.sidebar_second: Items for the second sidebar.
+- * - page.page_bottom: Items for the footer region.
+- * - page.breadcrumb: Items for the breadcrumb region.
+  *
+  * @see template_preprocess_page()
+  * @see seven_preprocess_page()
+@@ -63,19 +57,13 @@
+         <h1 class="page-title">{{ title }}</h1>
+       {% endif %}
+       {{ title_suffix }}
+-      {% if primary_local_tasks %}
+-        {{ primary_local_tasks }}
+-      {% endif %}
++      {{ page.header }}
+     </div>
+   </header>
+ 
+   <div class="layout-container">
+-    {% if secondary_local_tasks %}
+-      <div class="tabs-secondary clearfix" role="navigation">{{ secondary_local_tasks }}</div>
+-    {% endif %}
+-
++    {{ page.pre_content }}
+     {{ page.breadcrumb }}
+-
+     <main class="page-content clearfix" role="main">
+       <div class="visually-hidden"><a id="main-content" tabindex="-1"></a></div>
+       {{ page.highlighted }}
+@@ -84,11 +72,6 @@
+           {{ page.help }}
+         </div>
+       {% endif %}
+-      {% if action_links %}
+-        <ul class="action-links">
+-          {{ action_links }}
+-        </ul>
+-      {% endif %}
+       {{ page.content }}
+     </main>
+ 

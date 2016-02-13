@@ -1,1 +1,1 @@
-/Users/joel/bin/extras/MySQLTuner-perl/mysqltuner.pl
+extras/MySQLTuner-perl/mysqltuner.pl

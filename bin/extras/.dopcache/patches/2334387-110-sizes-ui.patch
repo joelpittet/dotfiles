@@ -1,0 +1,272 @@
+diff --git a/core/modules/responsive_image/responsive_image.module b/core/modules/responsive_image/responsive_image.module
+index e7e2465..5ff70fd 100644
+--- a/core/modules/responsive_image/responsive_image.module
++++ b/core/modules/responsive_image/responsive_image.module
+@@ -28,13 +28,25 @@ function responsive_image_help($route_name, RouteMatchInterface $route_match) {
+     case 'help.page.responsive_image':
+       $output = '';
+       $output .= '<h3>' . t('About') . '</h3>';
+-      $output .= '<p>' . t('The Responsive Image module provides an image formatter and breakpoint mappings to output responsive images using the HTML5 picture tag. For more information, see the <a href="!responsive_image">online documentation for the Responsive Image module</a>.', array( '!responsive_image' => 'https://www.drupal.org/documentation/modules/responsive_image')) . '</p>';
++      $output .= '<p>' . t('The Responsive Image module provides an image formatter that allows browsers to select which image file to display based on media queries or which image file types the browser supports, using the HTML 5 picture and source elements and/or the sizes, srcset and type attributes. For more information, see the <a href="!responsive_image">online documentation for the Responsive Image module</a>.', array( '!responsive_image' => 'https://www.drupal.org/documentation/modules/responsive_image')) . '</p>';
+       $output .= '<h3>' . t('Uses') . '</h3>';
+       $output .= '<dl>';
+       $output .= '<dt>' . t('Defining responsive image styles') . '</dt>';
+-      $output .= '<dd>' . t('By creating responsive image styles you define the image styles that are being used to output images at certain breakpoints. On the <a href="!responsive_image_style">Responsive image styles</a> page, click <em>Add responsive image style</em> to create a new style. First chose a label and a breakpoint group and click Save. After that you can choose the image styles that will be used for each breakpoint. Image styles can be defined on the <a href="!image_styles">Image styles page</a> that is provided by the <a href="!image_help">Image module</a>. Breakpoints are defined in the configuration files of the theme. See the <a href="!breakpoint_help">help page of the Breakpoint module</a> for more information.', array('!responsive_image_style' => \Drupal::url('entity.responsive_image_style.collection'), '!image_styles' => \Drupal::url('entity.image_style.collection'),'!image_help' => \Drupal::url('help.page', array('name' => 'image')), '!breakpoint_help' => \Drupal::url('help.page', array('name' => 'breakpoint')))) . '</dd>';
++      $output .= '<dd>' . t('By creating responsive image styles you define which options the browser has in selecting which image file to display. In most cases this means providing different image sizes based on the viewport size. On the <a href="!responsive_image_style">Responsive image styles</a> page, click <em>Add responsive image style</em> to create a new style. First choose a label, a fallback image style and a breakpoint group and click Save.', array('!responsive_image_style' => \Drupal::url('entity.responsive_image_style.collection'))) . '</dd>';
++      $output .= '<dl>';
++      $output .= '<dt>' . t('Fallback image style') . '</dt>';
++      $output .= '<dd>' . t('The fallback image style is typically the smallest size image you expect to appear in this space. Because the responsive images module uses the Picturefill library so that responsive images can work in older browsers, the fallback image should only appear on a site if an error occurs.)</dd>');
++      $output .= '<dt>' . t('Breakpoint groups: viewport sizing vs art direction') . '</dt>';
++      $output .= '<dd>' . t('The breakpoint group typically only needs a single breakpoint with an empty media query in order to do <em>viewport sizing.</em> Multiple breakpoints are used for changing the crop or aspect ratio of images at different viewport sizes, which is often referred to as <em>art direction.</em> Once you select a breakpoint group, you can choose which breakpoints to use for the responsive image style. By default, the option <em>do not use this breakpoint</em> is selected for each breakpoint. See the <a href="!breakpoint_help">help page of the Breakpoint module</a> for more information.', array('!breakpoint_help' => \Drupal::url('help.page', array('name' => 'breakpoint')))) . '</dd>';
++      $output .= '<dt>' . t('Breakpoint settings: sizes vs image styles') . '</dt>';
++      $output .= '<dd>' . t('While you have the option to provide only image style per breakpoint, the sizes option allows you to provide more options to browsers as to which image file it can display, even when using multiple breakpoints for art direction. Breakpoints are defined in the configuration files of the theme.</dd>');
++      $output .= '<dt>' . t('Sizes field') . '</dt>';
++      $output .= '<dd>' . t('Once the sizes option is selected, you can let the browser know the size of this image in relation to the site layout, using the <em>Sizes</em> field. For a hero image that always fills the entire screen, you could simply enter 100vw, which means 100% of the viewport width. For an image that fills 90% of the screen for small viewports, but only fills 40% of the screen when the viewport is larger than 40em (typically 640px), you could enter "(min-width: 40em) 40vw, 90vw" in the Sizes field. The last item in the comma-separated list is the smallest viewport size: other items in the comma-separated list should have a media condition paired with an image width. <em>Media conditions</em> are similar to a media query, often a min-width paired with a viewport width using em or px units: e.g. (min-width: 640px) or (min-width: 40em). This is paired with the <em>image width</em> at that viewport size using px, em or vw units. The vw unit is viewport width and is used instead of a percentage because the percentage always refers to the width of the entire viewport.</dd>');
++      $output .= '<dt>' . t('Image styles for sizes') . '</dt>';
++      $output .= '<dd>' . t('Below the Sizes field you can choose multiple image styles so the browser can choose the best image file size to fill the space defined in the Sizes field. Typically you will want to use image styles that resize your image to have options that range from the smallest px width possible for the space the image will appear in to the largest px width possible, with a variety of widths in between. You may want to provide image styles with widths that are 1.5x to 2x the space available in the layout to account for high resolution screens. Image styles can be defined on the <a href="!image_styles">Image styles page</a> that is provided by the <a href="!image_help">Image module</a>.', array('!image_styles' => \Drupal::url('entity.image_style.collection'), '!image_help' => \Drupal::url('help.page', array('name' => 'image')))) . '</dd>';
++      $output .= '</dl></dd>';
+       $output .= '<dt>' . t('Using responsive image styles in Image fields') . '</dt>';
+-      $output .= '<dd>' . t('After defining responsive image styles, you can use them in the display settings for your Image fields, so that the site displays responsive images using the HTML5 picture tag. Open the Manage display page for the entity type (content type, taxonomy vocabulary, etc.) that the Image field is attached to. Choose the format <em>Responsive image</em>, click the Edit icon, and select one of the responsive image styles that you have created. For general information on how to manage fields and their display see the <a href="!field_ui">Field UI module help page</a>. For background information about entities and fields see the <a href="!field_help">Field module help page</a>.', array('!field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? \Drupal::url('help.page', array('name' => 'field_ui')) : '#','!field_help' => \Drupal::url('help.page', array('name' => 'field')))) . '</dd>';
++      $output .= '<dd>' . t('After defining responsive image styles, you can use them in the display settings for your Image fields, so that the site displays responsive images using the HTML5 picture tag. Open the Manage display page for the entity type (content type, taxonomy vocabulary, etc.) that the Image field is attached to. Choose the format <em>Responsive image</em>, click the Edit icon, and select one of the responsive image styles that you have created. For general information on how to manage fields and their display see the <a href="!field_ui">Field UI module help page</a>. For background information about entities and fields see the <a href="!field_help">Field module help page</a>.', array('!field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? \Drupal::url('help.page', array('name' => 'field_ui')) : '#', '!field_help' => \Drupal::url('help.page', array('name' => 'field')))) . '</dd>';
+       $output .= '</dl>';
+       return $output;
+ 
+diff --git a/core/modules/responsive_image/src/ResponsiveImageStyleForm.php b/core/modules/responsive_image/src/ResponsiveImageStyleForm.php
+index d7df134..dce4c3c 100644
+--- a/core/modules/responsive_image/src/ResponsiveImageStyleForm.php
++++ b/core/modules/responsive_image/src/ResponsiveImageStyleForm.php
+@@ -83,12 +83,16 @@ public function form(array $form, FormStateInterface $form_state) {
+       '#disabled' => (bool) $responsive_image_style->id() && $this->operation != 'duplicate',
+     );
+ 
++    $image_styles = image_style_options(TRUE);
++    $image_styles[RESPONSIVE_IMAGE_EMPTY_IMAGE] = $this->t('- empty image -');
++
+     if ((bool) $responsive_image_style->id() && $this->operation != 'duplicate') {
+-      $description = $this->t('Select a breakpoint group from the installed themes.') . ' ' . $this->t("Warning: if you change the breakpoint group you lose all your selected image style mappings.");
++      $description = $this->t('Select a breakpoint group from the installed themes. Below you can select which breakpoints to use from this group. You can also select which image style or styles to use for each breakpoint you use.') . ' ' . $this->t("Warning: if you change the breakpoint group you lose all your image style selections for each breakpoint.");
+     }
+     else {
+       $description = $this->t('Select a breakpoint group from the installed themes.');
+     }
++
+     $form['breakpoint_group'] = array(
+       '#type' => 'select',
+       '#title' => $this->t('Breakpoint group'),
+@@ -98,47 +102,90 @@ public function form(array $form, FormStateInterface $form_state) {
+       '#description' => $description,
+     );
+ 
+-    $image_styles = image_style_options(TRUE);
+-    $image_styles[RESPONSIVE_IMAGE_EMPTY_IMAGE] = $this->t('- empty image -');
+-
+-    $form['fallback_image_style'] = array(
+-      '#title' => $this->t('Fallback image style'),
+-      '#type' => 'select',
+-      '#default_value' => $responsive_image_style->getFallbackImageStyle(),
+-      '#options' => $image_styles,
+-      '#required' => TRUE,
+-    );
+-
+     // By default, breakpoints are ordered from smallest weight to largest:
+     // the smallest weight is expected to have the smallest breakpoint width,
+     // while the largest weight is expected to have the largest breakpoint
+     // width. For responsive images, we need largest breakpoint widths first, so
+     // we need to reverse the order of these breakpoints.
+     $breakpoints = array_reverse($this->breakpointManager->getBreakpointsByGroup($responsive_image_style->getBreakpointGroup()));
++
+     foreach ($breakpoints as $breakpoint_id => $breakpoint) {
+       foreach ($breakpoint->getMultipliers() as $multiplier) {
+         $label = $multiplier . ' ' . $breakpoint->getLabel() . ' [' . $breakpoint->getMediaQuery() . ']';
+         $form['keyed_styles'][$breakpoint_id][$multiplier] = array(
+-          '#type' => 'container',
++          '#type' => 'details',
++          '#title' => $label,
+         );
+         $image_style_mapping = $responsive_image_style->getImageStyleMapping($breakpoint_id, $multiplier);
+-        // @todo The image_mapping_type is only temporarily hardcoded, until
+-        // support for the other responsive image mapping type ('sizes') is
+-        // added in https://www.drupal.org/node/2334387.
++        if (\Drupal::moduleHandler()->moduleExists('help')) {
++          $description = $this->t('See the <a href="!responsive_image_help">Responsive Image help page</a> for information on the sizes attribute.', array('!responsive_image_help' => (\Drupal::url('help.page', array('name' => 'responsive_image')))));
++        }
++        else {
++          $description = $this->t('Enable the Help module for more information on the sizes attribute.');
++        }
+         $form['keyed_styles'][$breakpoint_id][$multiplier]['image_mapping_type'] = array(
+-          '#type' => 'value',
+-          '#value' => 'image_style',
++          '#title' => $this->t('Type'),
++          '#type' => 'radios',
++          '#options' => array(
++            'sizes' => $this->t('Select multiple image styles and use the sizes attribute.'),
++            'image_style' => $this->t('Select a single image style.'),
++            '_none' => $this->t('Do not use this breakpoint.'),
++          ),
++          '#default_value' => isset($image_style_mapping['image_mapping_type']) ? $image_style_mapping['image_mapping_type'] : '_none',
++          '#description' => $description,
+         );
+-        $form['keyed_styles'][$breakpoint_id][$multiplier]['image_mapping'] = array(
++        $form['keyed_styles'][$breakpoint_id][$multiplier]['image_style'] = array(
+           '#type' => 'select',
+-          '#title' => $label,
++          '#title' => $this->t('Image style'),
+           '#options' => $image_styles,
+-          '#default_value' => isset($image_style_mapping['image_mapping']) ? $image_style_mapping['image_mapping'] : array(),
++          '#default_value' => isset($image_style_mapping['image_mapping']) && is_string($image_style_mapping['image_mapping']) ? $image_style_mapping['image_mapping'] : '',
+           '#description' => $this->t('Select an image style for this breakpoint.'),
++          '#states' => array(
++            'visible' => array(
++              ':input[name="keyed_styles[' . $breakpoint_id . '][' . $multiplier . '][image_mapping_type]"]' => array('value' => 'image_style'),
++            ),
++          ),
+         );
++        $form['keyed_styles'][$breakpoint_id][$multiplier]['sizes'] = array(
++          '#type' => 'textfield',
++          '#title' => $this->t('Sizes'),
++          '#default_value' => isset($image_style_mapping['image_mapping']['sizes']) ? $image_style_mapping['image_mapping']['sizes'] : '',
++          '#description' => $this->t('Enter the value for the sizes attribute: for example "(min-width:700px) 700px, 100vw)".'),
++          '#states' => array(
++            'visible' => array(
++              ':input[name="keyed_styles[' . $breakpoint_id . '][' . $multiplier . '][image_mapping_type]"]' => array('value' => 'sizes'),
++            ),
++          ),
++        );
++        $form['keyed_styles'][$breakpoint_id][$multiplier]['sizes_image_styles'] = array(
++          '#title' => $this->t('Image styles'),
++          '#type' => 'checkboxes',
++          '#options' => array_diff_key($image_styles, array('' => '')),
++          '#description' => $this->t('Select image styles with widths that range from the smallest amount of space this image will take up in the layout to the largest, bearing in mind that high resolution screens will need images 1.5x to 2x larger.'),
++          '#default_value' => isset($image_style_mapping['image_mapping']['sizes_image_styles']) ? $image_style_mapping['image_mapping']['sizes_image_styles'] : array(),
++          '#states' => array(
++            'visible' => array(
++              ':input[name="keyed_styles[' . $breakpoint_id . '][' . $multiplier . '][image_mapping_type]"]' => array('value' => 'sizes'),
++            ),
++          ),
++        );
++
++        // Expand the details if "do not use this breakpoint" was not selected.
++        if ($form['keyed_styles'][$breakpoint_id][$multiplier]['image_mapping_type']['#default_value'] != '_none') {
++          $form['keyed_styles'][$breakpoint_id][$multiplier]['#open'] = TRUE;
++        }
+       }
+     }
+ 
++    $form['fallback_image_style'] = array(
++      '#title' => $this->t('Fallback image style'),
++      '#type' => 'select',
++      '#default_value' => $responsive_image_style->getFallbackImageStyle(),
++      '#options' => $image_styles,
++      '#required' => TRUE,
++      '#description' => t('Select the smallest image style you expect to appear in this space. The fallback image style should only appear on the site if an error occurs.'),
++    );
++
+     $form['#tree'] = TRUE;
+ 
+     return parent::form($form, $form_state, $responsive_image_style);
+@@ -156,9 +203,6 @@ public function validateForm(array &$form, FormStateInterface $form_state) {
+         // Remove the image style mappings since the breakpoint ID has changed.
+         $form_state->unsetValue('keyed_styles');
+       }
+-      // @todo Filter 'sizes_image_styles' to a normal array in
+-      // https://www.drupal.org/node/2334387. For an example see
+-      // \Drupal\Core\Block\BlockBase::validateConfigurationForm().
+     }
+   }
+ 
+@@ -173,7 +217,23 @@ public function save(array $form, FormStateInterface $form_state) {
+     if ($form_state->hasValue('keyed_styles')) {
+       foreach ($form_state->getValue('keyed_styles') as $breakpoint_id => $multipliers) {
+         foreach ($multipliers as $multiplier => $image_style_mapping) {
+-          $responsive_image_style->addImageStyleMapping($breakpoint_id, $multiplier, $image_style_mapping);
++          if ($image_style_mapping['image_mapping_type'] === 'sizes') {
++            $mapping = array(
++              'image_mapping_type' => 'sizes',
++              'image_mapping' => array(
++                'sizes' => $image_style_mapping['sizes'],
++                'sizes_image_styles' => array_keys(array_filter($image_style_mapping['sizes_image_styles'])),
++              )
++            );
++            $responsive_image_style->addImageStyleMapping($breakpoint_id, $multiplier, $mapping);
++          }
++          elseif ($image_style_mapping['image_mapping_type'] === 'image_style') {
++            $mapping = array(
++              'image_mapping_type' => 'image_style',
++              'image_mapping' => $image_style_mapping['image_style'],
++            );
++            $responsive_image_style->addImageStyleMapping($breakpoint_id, $multiplier, $mapping);
++          }
+         }
+       }
+     }
+diff --git a/core/modules/responsive_image/src/Tests/ResponsiveImageAdminUITest.php b/core/modules/responsive_image/src/Tests/ResponsiveImageAdminUITest.php
+index a3e2213..1e4ee88 100644
+--- a/core/modules/responsive_image/src/Tests/ResponsiveImageAdminUITest.php
++++ b/core/modules/responsive_image/src/Tests/ResponsiveImageAdminUITest.php
+@@ -79,7 +79,15 @@ public function testResponsiveImageAdmin() {
+ 
+     foreach ($cases as $case) {
+       // Check if the radio buttons are present.
+-      $this->assertFieldByName('keyed_styles[responsive_image_test_module.' . $case[0] . '][' . $case[1] . '][image_mapping]', '');
++      $this->assertFieldByName('keyed_styles[responsive_image_test_module.' . $case[0] . '][' . $case[1] . '][image_mapping_type]', '');
++      // Check if the image style dropdowns are present.
++      $this->assertFieldByName('keyed_styles[responsive_image_test_module.' . $case[0] . '][' . $case[1] . '][image_style]', '');
++      // Check if the sizes textfields are present.
++      $this->assertFieldByName('keyed_styles[responsive_image_test_module.' . $case[0] . '][' . $case[1] . '][sizes]', '');
++      // Check if the image styles checkboxes are present.
++      foreach (array_keys(image_style_options(FALSE)) as $image_style_name) {
++        $this->assertFieldByName('keyed_styles[responsive_image_test_module.' . $case[0] . '][' . $case[1] . '][sizes_image_styles][' . $image_style_name . ']');
++      }
+     }
+ 
+     // Save styles for 1x variant only.
+@@ -87,24 +95,35 @@ public function testResponsiveImageAdmin() {
+       'label' => 'Style One',
+       'breakpoint_group' => 'responsive_image_test_module',
+       'fallback_image_style' => 'thumbnail',
+-      'keyed_styles[responsive_image_test_module.mobile][1x][image_mapping]' => 'thumbnail',
+-      'keyed_styles[responsive_image_test_module.narrow][1x][image_mapping]' => 'medium',
+-      'keyed_styles[responsive_image_test_module.wide][1x][image_mapping]' => 'large',
++      'keyed_styles[responsive_image_test_module.mobile][1x][image_mapping_type]' => 'image_style',
++      'keyed_styles[responsive_image_test_module.mobile][1x][image_style]' => 'thumbnail',
++      'keyed_styles[responsive_image_test_module.narrow][1x][image_mapping_type]' => 'sizes',
++      'keyed_styles[responsive_image_test_module.narrow][1x][sizes]' => '(min-width: 700px) 700px, 100vw',
++      'keyed_styles[responsive_image_test_module.narrow][1x][sizes_image_styles][large]' => 'large',
++      'keyed_styles[responsive_image_test_module.narrow][1x][sizes_image_styles][medium]' => 'medium',
++      'keyed_styles[responsive_image_test_module.wide][1x][image_mapping_type]' => 'image_style',
++      'keyed_styles[responsive_image_test_module.wide][1x][image_style]' => 'large',
+     );
+     $this->drupalPostForm('admin/config/media/responsive-image-style/style_one', $edit, t('Save'));
+     $this->drupalGet('admin/config/media/responsive-image-style/style_one');
+ 
+-    // Check the style for multipliers 1x and 2x for the mobile breakpoint.
+-    $this->assertFieldByName('keyed_styles[responsive_image_test_module.mobile][1x][image_mapping]', 'thumbnail');
+-    $this->assertFieldByName('keyed_styles[responsive_image_test_module.mobile][2x][image_mapping]', '');
+-
+-    // Check the style for multipliers 1x and 2x for the narrow breakpoint.
+-    $this->assertFieldByName('keyed_styles[responsive_image_test_module.narrow][1x][image_mapping]', 'medium');
+-    $this->assertFieldByName('keyed_styles[responsive_image_test_module.narrow][2x][image_mapping]', '');
+-
+-    // Check the style for multipliers 1x and 2x for the wide breakpoint.
+-    $this->assertFieldByName('keyed_styles[responsive_image_test_module.wide][1x][image_mapping]', 'large');
+-    $this->assertFieldByName('keyed_styles[responsive_image_test_module.wide][2x][image_mapping]', '');
++    // Check the mapping for multipliers 1x and 2x for the mobile breakpoint.
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.mobile][1x][image_style]', 'thumbnail');
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.mobile][1x][image_mapping_type]', 'image_style');
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.mobile][2x][image_mapping_type]', '_none');
++
++    // Check the mapping for multipliers 1x and 2x for the narrow breakpoint.
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.narrow][1x][image_mapping_type]', 'sizes');
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.narrow][1x][sizes]', '(min-width: 700px) 700px, 100vw');
++    $this->assertFieldChecked('edit-keyed-styles-responsive-image-test-modulenarrow-1x-sizes-image-styles-large');
++    $this->assertFieldChecked('edit-keyed-styles-responsive-image-test-modulenarrow-1x-sizes-image-styles-medium');
++    $this->assertNoFieldChecked('edit-keyed-styles-responsive-image-test-modulenarrow-1x-sizes-image-styles-thumbnail');
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.narrow][2x][image_mapping_type]', '_none');
++
++    // Check the mapping for multipliers 1x and 2x for the wide breakpoint.
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.wide][1x][image_style]', 'large');
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.wide][1x][image_mapping_type]', 'image_style');
++    $this->assertFieldByName('keyed_styles[responsive_image_test_module.wide][2x][image_mapping_type]', '_none');
+ 
+     // Delete the style.
+     $this->drupalGet('admin/config/media/responsive-image-style/style_one/delete');

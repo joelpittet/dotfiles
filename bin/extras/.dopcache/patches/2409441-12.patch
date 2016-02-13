@@ -1,0 +1,83 @@
+diff --git a/core/modules/migrate_drupal/src/Tests/Table/d7/Variable.php b/core/modules/migrate_drupal/src/Tests/Table/d7/Variable.php
+index 8f4c3a8..5132d1f 100644
+--- a/core/modules/migrate_drupal/src/Tests/Table/d7/Variable.php
++++ b/core/modules/migrate_drupal/src/Tests/Table/d7/Variable.php
+@@ -335,6 +335,9 @@ public function load() {
+       'name' => 'syslog_identity',
+       'value' => 's:6:"drupal";',
+     ))->values(array(
++      'name' => 'teaser_length',
++      'value' => 'i:1024;',
++    ))->values(array(
+       'name' => 'theme_default',
+       'value' => 's:6:"bartik";',
+     ))->values(array(
+@@ -449,4 +452,4 @@ public function load() {
+   }
+ 
+ }
+-#5b6552f715939e2b33c22779e47e73e3
++#169a9ce280e87e81929b3689cb21d94e
+diff --git a/core/modules/text/migration_templates/d7_text_settings.yml b/core/modules/text/migration_templates/d7_text_settings.yml
+new file mode 100644
+index 0000000..9d80e2b
+--- /dev/null
++++ b/core/modules/text/migration_templates/d7_text_settings.yml
+@@ -0,0 +1,13 @@
++id: d7_text_settings
++label: Drupal 7 teaser length configuration
++migration_tags:
++  - Drupal 7
++source:
++  plugin: variable
++  variables:
++    - teaser_length
++process:
++  default_summary_length: teaser_length
++destination:
++  plugin: config
++  config_name: text.settings
+diff --git a/core/modules/text/src/Tests/Migrate/d7/MigrateTextSettingsTest.php b/core/modules/text/src/Tests/Migrate/d7/MigrateTextSettingsTest.php
+new file mode 100644
+index 0000000..c029d76
+--- /dev/null
++++ b/core/modules/text/src/Tests/Migrate/d7/MigrateTextSettingsTest.php
+@@ -0,0 +1,38 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\text\Tests\Migrate\d7\MigrateTextSettingsTest.
++ */
++
++namespace Drupal\text\Tests\Migrate\d7;
++
++use Drupal\migrate_drupal\Tests\d7\MigrateDrupal7TestBase;
++
++/**
++ * Tests migration of Text variables to configuration.
++ *
++ * @group text
++ */
++class MigrateTextSettingsTest extends MigrateDrupal7TestBase {
++
++  public static $modules = ['text'];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp() {
++    parent::setUp();
++    $this->installConfig(['text']);
++    $this->loadDumps(['Variable.php']);
++    $this->executeMigration('d7_text_settings');
++  }
++
++  /**
++   * Tests migration of Text's settings to configuration.
++   */
++  public function testMigration() {
++    $this->assertIdentical(1024, \Drupal::config('text.settings')->get('default_summary_length'));
++  }
++
++}

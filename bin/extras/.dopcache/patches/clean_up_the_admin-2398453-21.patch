@@ -1,0 +1,87 @@
+diff --git a/core/themes/bartik/bartik.libraries.yml b/core/themes/bartik/bartik.libraries.yml
+index 009a67f..ba0b514 100644
+--- a/core/themes/bartik/bartik.libraries.yml
++++ b/core/themes/bartik/bartik.libraries.yml
+@@ -4,7 +4,6 @@ global-styling:
+     base:
+       css/base/elements.css: {}
+     component:
+-      css/components/admin.css: {}
+       css/components/block.css: {}
+       css/components/book.css: {}
+       css/components/breadcrumb.css: {}
+@@ -12,6 +11,7 @@ global-styling:
+       css/components/comments.css: {}
+       css/components/content.css: {}
+       css/components/contextual.css: {}
++      css/components/demo-block.css: {}
+       # @see https://www.drupal.org/node/2389735
+       css/components/dropbutton.component.css: {}
+       css/components/featured-top.css: {}
+diff --git a/core/themes/bartik/css/components/admin.css b/core/themes/bartik/css/components/admin.css
+deleted file mode 100644
+index b9803ce..0000000
+--- a/core/themes/bartik/css/components/admin.css
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/* ---------- Admin-specific Theming ---------- */
+-.path-admin #content img {
+-  margin-right: 15px; /* LTR */
+-}
+-[dir="rtl"] .path-admin #content img {
+-  margin-left: 15px;
+-  margin-right: 0;
+-}
+-.path-admin #content .simpletest-image img {
+-  margin: 0;
+-}
+-.path-admin #admin-dblog img {
+-  margin: 0 5px;
+-}
+-
+-/* Block demo mode */
+-.demo-block {
+-  background: #ffff66;
+-  border: 1px dotted #9f9e00;
+-  color: #000;
+-  font: 90% "Lucida Grande", "Lucida Sans Unicode", sans-serif;
+-  margin: 5px;
+-  padding: 5px;
+-  text-align: center;
+-  text-shadow: none;
+-}
+-.featured-top .demo-block {
+-  font-size: 0.55em;
+-}
+-#header .demo-block {
+-  width: 500px;
+-}
+-
+-
+diff --git a/core/themes/bartik/css/components/demo-block.css b/core/themes/bartik/css/components/demo-block.css
+new file mode 100644
+index 0000000..03575be
+--- /dev/null
++++ b/core/themes/bartik/css/components/demo-block.css
+@@ -0,0 +1,21 @@
++/**
++ * @file
++ * Visual styles for Bartik's block demonstration.
++ */
++
++.demo-block {
++  background: #ffff66;
++  border: 1px dotted #9f9e00;
++  color: #000;
++  font: 90% "Lucida Grande", "Lucida Sans Unicode", sans-serif;
++  margin: 5px;
++  padding: 5px;
++  text-align: center;
++  text-shadow: none;
++}
++.featured-top .demo-block {
++  font-size: 0.55em;
++}
++.header .demo-block {
++  width: 500px;
++}

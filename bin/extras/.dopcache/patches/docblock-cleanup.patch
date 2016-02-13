@@ -1,0 +1,13 @@
+diff --git a/core/lib/Drupal/Core/EventSubscriber/FinishResponseSubscriber.php b/core/lib/Drupal/Core/EventSubscriber/FinishResponseSubscriber.php
+index 48b53bd..0255101 100644
+--- a/core/lib/Drupal/Core/EventSubscriber/FinishResponseSubscriber.php
++++ b/core/lib/Drupal/Core/EventSubscriber/FinishResponseSubscriber.php
+@@ -90,7 +90,7 @@ public function __construct(LanguageManagerInterface $language_manager, ConfigFa
+   /**
+    * Sets extra headers on successful responses.
+    *
+-   * @param Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
++   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+    *   The event to process.
+    */
+   public function onRespond(FilterResponseEvent $event) {

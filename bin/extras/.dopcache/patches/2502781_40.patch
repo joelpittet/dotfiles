@@ -1,0 +1,44 @@
+diff --git a/core/modules/file/file.field.inc b/core/modules/file/file.field.inc
+index f09760f..cae024b 100644
+--- a/core/modules/file/file.field.inc
++++ b/core/modules/file/file.field.inc
+@@ -6,7 +6,6 @@
+  */
+ 
+ use Drupal\Component\Utility\Html;
+-use Drupal\Component\Utility\SafeMarkup;
+ use Drupal\Core\Field\FieldDefinitionInterface;
+ use Drupal\Core\Render\Element;
+ 
+@@ -96,13 +95,6 @@ function template_preprocess_file_widget_multiple(&$variables) {
+     // Render everything else together in a column, without the normal wrappers.
+     $widget['#theme_wrappers'] = array();
+     $information = drupal_render($widget);
+-
+-    // Render the previously hidden elements, using render() instead of
+-    // drupal_render(), to undo the earlier hide().
+-    $operations = '';
+-    foreach ($operations_elements as $operation_element) {
+-      $operations .= render($operation_element);
+-    }
+     $display = '';
+     if ($element['#display_field']) {
+       unset($widget['display']['#title']);
+@@ -121,7 +113,16 @@ function template_preprocess_file_widget_multiple(&$variables) {
+       $row[] = $display;
+     }
+     $row[] = $weight;
+-    $row[] = SafeMarkup::set($operations);
++    // We need to use show() here rather than render() - there are multiple
++    // files so this will be processed again.
++    // @todo Fix what marks $operations_elements #printed too early.
++    // See https://www.drupal.org/node/2538710
++    foreach (Element::children($operations_elements) as $key) {
++      show($operations_elements[$key]);
++    }
++    $row[] = array(
++      'data' => $operations_elements,
++    );
+     $rows[] = array(
+       'data' => $row,
+       'class' => isset($widget['#attributes']['class']) ? array_merge($widget['#attributes']['class'], array('draggable')) : array('draggable'),
