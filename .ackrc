@@ -1,2 +1,15 @@
 # Drupal file types
 --type-set=drupal=.php,.inc,.module,.install,.info,.engine,.test
+
+# Ignore irrelevant Drupal folders.
+--ignore-dir=sites/default/files
+
+# Ignore .patch and .diff files.
+--ignore-file=ext:patch,diff
+
+# Add Twig file type.
+--type-set=twig=.twig
+
+# Page output by default.
+--pager=less -FnrX
+
