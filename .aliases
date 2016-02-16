@@ -81,10 +81,10 @@ alias dcc='drush cc all'
 # Default Tower to open in 'Status' view.
 #alias gittower='gittower -s '
 
-alias xddis='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{,dis} && brew services restart php56'
-alias xden ='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{dis,} && brew services restart php56'
-alias xhdis='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{,dis} && brew services restart php56'
-alias xhen ='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{dis,} && brew services restart php56'
+#alias xddis='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{,dis} && brew services restart php56'
+#alias xden ='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{dis,} && brew services restart php56'
+#alias xhdis='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{,dis} && brew services restart php56'
+#alias xhen ='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{dis,} && brew services restart php56'
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
