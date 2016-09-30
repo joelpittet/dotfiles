@@ -77,6 +77,7 @@ alias pa='cat *.patch | patch -p1'
 alias d='drush'
 alias dy='drush -y'
 alias dcc='drush cc all'
+alias dcr='drush cr'
 
 # Default Tower to open in 'Status' view.
 #alias gittower='gittower -s '
