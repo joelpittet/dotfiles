@@ -8,29 +8,16 @@ alias .......="cd ../../../../../.."
 alias ........="cd ../../../../../../.."
 
 # Shortcuts
-alias in="cd ~/Inbox"
-alias out="cd ~/Outbox"
-alias db="cd ~/Dropbox"
-alias p="cd ~/Projects"
-alias ws="cd ~/WebServer"
 alias g="git"
 alias h="history"
 alias j="jobs"
 alias v="vim"
-#alias m="mate ."
 alias s="subl ."
 alias o="open"
 alias oo="open ."
 
 # Drupal sandboxen
-alias d7="z drupal7"
-alias d8="z drupal8"
 alias drupalcs="phpcs --standard=Drupal --extensions='php,module,inc,install,test,profile,theme,js,css,info,txt'"
-alias gr8="git reset --hard origin/8.0.x"
-alias gr81="git reset --hard origin/8.1.x"
-
-# Log files
-#alias phplog='tail -f /Applications/MAMP/logs/php_error.log'
 
 # Git aliases
 alias gba='git branch -a'
@@ -79,14 +66,6 @@ alias dy='drush -y'
 alias dcc='drush cc all'
 alias dcr='drush cr'
 
-# Default Tower to open in 'Status' view.
-#alias gittower='gittower -s '
-
-#alias xddis='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{,dis} && brew services restart php56'
-#alias xden ='mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini{dis,} && brew services restart php56'
-#alias xhdis='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{,dis} && brew services restart php56'
-#alias xhen ='mv /usr/local/etc/php/5.6/conf.d/ext-xhprof.ini{dis,} && brew services restart php56'
-
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
 	colorflag="--color"
@@ -115,7 +94,7 @@ alias sudo='sudo '
 alias gurl="curl --compressed"
 
 # Get OS X Software Updates, and update installed global node packages, Homebrew, and their installed packages.
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade --all; brew cleanup; npm update -g; composer selfupdate'
+alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm update -g; composer selfupdate'
 
 # IP addresses
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -135,7 +114,6 @@ alias lscleanup="/System/Library/Frameworks/CoreServices.framework/Frameworks/La
 alias bs="brew services"
 
 # View HTTP traffic
-#alias sniff="sudo ngrep -d 'en1' -t '^(GET|POST) ' 'tcp and port 80'"
 alias httpdump="sudo tcpdump -i en1 -n -s 0 -w - | grep -a -o -E \"Host\: .*|GET \/.*\""
 
 # Canonical hex dump; some systems have this symlinked
@@ -175,11 +153,6 @@ alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.ar
 # Usage: `mergepdf -o output.pdf input{1,2,3}.pdf`
 alias mergepdf='/System/Library/Automator/Combine\ PDF\ Pages.action/Contents/Resources/join.py'
 
-# Disable Spotlight
-alias spotoff="sudo mdutil -a -i off"
-# Enable Spotlight
-alias spoton="sudo mdutil -a -i on"
-
 # PlistBuddy alias, because sometimes `defaults` just doesn’t cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
 
@@ -188,17 +161,9 @@ alias plistbuddy="/usr/libexec/PlistBuddy"
 # find . -name .gitattributes | map dirname
 alias map="xargs -n1"
 
-# One of @janmoesen’s ProTip™s
-for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
-	alias "$method"="lwp-request -m '$method'"
-done
-
 # IOS SIMULATOR
 alias ios='open /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Applications/iPhone\ Simulator.app/'
 
 # Stuff I never really use but cannot delete either because of http://xkcd.com/530/
 alias stfu="osascript -e 'set volume output muted true' && echo 'shhh! I am trying to sleep!'"
 alias pumpitup="osascript -e 'set volume 7' && echo 'Dialed to 11!'"
-
-# Ruby SASS
-alias watch="bundle exec compass watch"
