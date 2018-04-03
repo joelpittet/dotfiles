@@ -1,7 +1,9 @@
 # Make Sublime Text the default editor
 export EDITOR="subl -w -n"
+
 # Don’t clear the screen after quitting a manual page
 export MANPAGER="less -X"
+
 # Highlight section titles in manual pages
 export LESS_TERMCAP_md="$ORANGE"
 
@@ -21,3 +23,13 @@ export LESS_TERMCAP_md="$ORANGE"
 
 # Don’t clear the screen after quitting a manual page
 export MANPAGER="less -X"
+
+# Glassfish
+export GLASSFISH_HOME=/usr/local/opt/glassfish/libexec
+
+# SQL Plus
+export PATH=~/instantclient_12_2:$PATH
+
+# Drush Launcher Fallback.
+# https://github.com/drush-ops/drush-launcher/#fallback
+export DRUSH_LAUNCHER_FALLBACK=~/bin/extras/drush/drush

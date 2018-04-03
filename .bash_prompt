@@ -2,28 +2,28 @@
 # http://brettterpstra.com/my-new-favorite-bash-prompt/
 
 prompt_command () {
-    # If we're in a Git repo, show current branch
-    if [ "\$(type -t __git_ps1)" ]; then
-      BRANCH="\$(__git_ps1 '[ %s ] ')"
-    fi
-    # Format time for prompt string
-    local TIME=`fmt_time`
-    local LOAD=`uptime|awk '{min=NF-2;print $min}'`
-    local GREEN="\[\033[0;32m\]"
-    local CYAN="\[\033[0;36m\]"
-    local YELLOW="\[\033[0;33m\]"
-    local BCYAN="\[\033[1;36m\]"
-    local BLUE="\[\033[0;34m\]"
-    local BBLUE="\[\033[1;34m\]"
-    local GRAY="\[\033[0;37m\]"
-    local DKGRAY="\[\033[1;30m\]"
-    local WHITE="\[\033[1;37m\]"
-    local RED="\[\033[0;31m\]"
-    # Return color to Terminal setting for text color
-    local DEFAULT="\[\033[0;39m\]"
-    # Set the titlebar to the last 2 fields of pwd
-    local TITLEBAR='\[\e]2;`pwdtail`\a'
-    export PS1="\[${TITLEBAR}\]${BLUE}[ ${BBLUE}\u${WHITE}@${BBLUE}\
+  # If we're in a Git repo, show current branch
+  if [ "\$(type -t __git_ps1)" ]; then
+    BRANCH="\$(__git_ps1 '[ %s ] ')"
+  fi
+  # Format time for prompt string
+  local TIME=`fmt_time`
+  local LOAD=`uptime|awk '{min=NF-2;print $min}'`
+  local GREEN="\[\033[0;32m\]"
+  local CYAN="\[\033[0;36m\]"
+  local YELLOW="\[\033[0;33m\]"
+  local BCYAN="\[\033[1;36m\]"
+  local BLUE="\[\033[0;34m\]"
+  local BBLUE="\[\033[1;34m\]"
+  local GRAY="\[\033[0;37m\]"
+  local DKGRAY="\[\033[1;30m\]"
+  local WHITE="\[\033[1;37m\]"
+  local RED="\[\033[0;31m\]"
+  # Return color to Terminal setting for text color
+  local DEFAULT="\[\033[0;39m\]"
+  # Set the titlebar to the last 2 fields of pwd
+  local TITLEBAR='\[\e]2;`pwdtail`\a'
+  export PS1="\[${TITLEBAR}\]${BLUE}[ ${BBLUE}\u${WHITE}@${BBLUE}\
 \h${DKGRAY}(${LOAD}) ${WHITE}${TIME} ${BLUE}]${RED}${GRAY}\
  \w\n${YELLOW}${BRANCH}${DEFAULT}$ "
 }
@@ -31,15 +31,15 @@ PROMPT_COMMAND=prompt_command
 
 # Format time just the way I likes it
 function fmt_time () {
-    if [ `date +%p` = "PM" ]; then
-        meridiem="pm"
-    else
-        meridiem="am"
-    fi
-    date +"%l:%M:%S$meridiem"|sed 's/ //g'
+  if [ `date +%p` = "PM" ]; then
+    meridiem="pm"
+  else
+    meridiem="am"
+  fi
+  date +"%l:%M:%S$meridiem"|sed 's/ //g'
 }
 
 # Returns the last 2 fields of the working directory
 function pwdtail () {
-    pwd|awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
+  pwd|awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
 }
