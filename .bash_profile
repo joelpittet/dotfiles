@@ -37,5 +37,12 @@ if [ -f `brew --prefix`/etc/bash_completion ]; then
   . `brew --prefix`/etc/bash_completion
 fi
 
+source ~/.git-prompt.sh
+
 # Load rupa's z if installed
 [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
+
+# OSX Sierra fix
+# https://www.reddit.com/r/osx/comments/52zn5r/difficulties_with_sshagent_in_macos_sierra/
+ssh-add -A &> /dev/null
+
