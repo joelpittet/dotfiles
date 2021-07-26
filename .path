@@ -1,7 +1,36 @@
 # Add `~/bin` to the `$PATH`
 export PATH="$HOME/bin:/usr/local/bin:/usr/local/sbin:$PATH"
 
+# SQL Plus
+# export PATH=~/instantclient_12_2:$PATH
+
+# MySQL Client
+export PATH="/usr/local/opt/mysql-client/bin:$PATH"
+
+# Python
+export PATH="$HOME/Library/Python/3.9/bin:$PATH"
+
+# Symfony
+export PATH="$HOME/.symfony/bin:$PATH"
+
+# PHP
+export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+
+# GNU SED
+export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+
+# Composer
+export PATH="$PATH:vendor/bin"
 # Add user's composer vendor bin to `$PATH`
 export PATH="$PATH:$HOME/.composer/vendor/bin"
 
+# Ruby using rbenv, see .exports
+# https://github.com/rbenv/rbenv
+#export PATH="/usr/local/opt/ruby/bin:$PATH"
+
+# SSH Copy ID
+export PATH="/usr/local/opt/ssh-copy-id/bin:$PATH"
+
+# GNU sed
 export PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"

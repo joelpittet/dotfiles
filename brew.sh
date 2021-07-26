@@ -78,14 +78,46 @@ brew install php
 #brew install xpdf
 #brew install xz
 
-# Install other useful binaries.
+# Install grepping packages.
 brew install ack
+brew install the_silver_searcher
+
+
+# Install languages packages.
+brew install node
+brew install perl
+brew install php
+brew install python
+brew install ruby
+
+# Install database packages.
+brew install mysql-client
+brew install rlwrap
+brew install sqlite
+
+# Install VCS.
 brew install git
+brew install subversion
+
+# Install other useful binaries.
+brew install dnsmasq
+brew install dos2unix
+brew install gnu-sed
 brew install gs
 brew install imagemagick
+brew install ncdu
+brew install openconnect
+brew install patchutils
+brew install pdfgrep
 brew install pv
-brew install rlwrap
+brew install rbenv
+brew install rsync
 brew install ssh-copy-id
+brew install terminal-notifier
+brew install webkit2png
+brew install z
+brew install zsh-completions
+brew install zsh-syntax-highlighting
 #brew install exiv2
 # brew install git-lfs
 # brew install lua
@@ -97,11 +129,10 @@ brew install ssh-copy-id
 #brew install vbindiff
 #brew install zopfli
 
-brew install webkit2png
-brew install z
+
 
 # Work.
-# ack
+#
 # adns
 # ansible
 # automake
@@ -111,12 +142,8 @@ brew install z
 # cmake
 # colordiff
 # dart-lang/dart/dart
-# dnsmasq
-# dos2unix
 # drud/ddev/ddev
 # ghostscript
-# git
-# gnu-sed
 # gnupg
 # httrack
 # jansson
@@ -127,40 +154,22 @@ brew install z
 # mcrypt
 # mistertea/et/et
 # mosh
-# mysql-client
-# ncdu
 # ninja
-# node
-# openconnect
 # openjdk@11
-# patchutils
-# pdfgrep
-# php
 # php@7.4
-# pv
 # python@3.8
 # qt@5
-# rbenv
-# rsync
 # ruby-install
 # sass/sass/sass
 # sassc
 # selenium-server-standalone
 # shellcheck
-# ssh-copy-id
 # subversion
-# the_silver_searcher
-# vim
-# wget
 # wp-cli
-# z
-# zsh-completions
-# zsh-syntax-highlighting
+
 
 # Original.
 # ansible
-# apr
-# apr-util
 # autoconf
 # bash
 # bash-completion
@@ -172,7 +181,6 @@ brew install z
 # gdbm
 # gettext
 # ghostscript
-# git
 # graphicsmagick
 # httpd24
 # icu4c
@@ -183,25 +191,14 @@ brew install z
 # makedepend
 # mcrypt
 # mhash
-# mod_fastcgi
-# mysql
-# node
 # nvm
 # openssl
 # pcre
-# perl
-# phantomjs
 # pkg-config
-# python
 # readline
-# ruby
 # sassc
 # slimerjs
-# sqlite
-# subversion
-# terminal-notifier
 # unixodbc
-# wget
 # xz
 
 # Remove outdated versions from the cellar.
