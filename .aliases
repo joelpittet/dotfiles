@@ -19,6 +19,10 @@ alias oo="open ."
 # Drupal sandboxen
 alias drupalcs="phpcs --standard=Drupal --extensions='php,module,inc,install,test,profile,theme,js,css,info,txt'"
 
+# Composer
+alias cu="composer update -n --with-dependencies"
+alias cua="composer update -n --with-all-dependencies"
+
 # Git aliases
 alias gba='git branch -a'
 alias gc='git commit -v'
@@ -113,7 +117,7 @@ alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[
 alias whois="whois -h whois-servers.net"
 
 # Flush Directory Service cache
-alias flush="dscacheutil -flushcache && killall -HUP mDNSResponder"
+alias flush="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
 
 # Clean up LaunchServices to remove duplicates in the “Open With” menu
 alias lscleanup="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user && killall Finder"

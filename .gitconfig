@@ -27,9 +27,9 @@
   reb = "!r() { git rebase -i HEAD~$1; }; r"
   # Undo a `git push`
   undopush = push -f origin HEAD^:master
-  # Kaleidoscope code review alias
-  # http://blackpixel.com/blog/2012/11/code-review-kaleidoscope.html
-  ksreview = "!sh -c 'SHA=${1:-HEAD}; BRANCH=${2:-master}; if [ $SHA == $BRANCH ] ; then SHA=HEAD; fi; git difftool -y -t Kaleidoscope $BRANCH...$SHA;' -"
+
+  # Merge Develop Into Master
+  mm = !git fetch --all && git checkout master && git pull && git merge develop --no-edit --no-ff && git push && git checkout develop && git merge master && git push
 
   st = status
   ci = commit
@@ -79,9 +79,6 @@
   remote = origin
   merge = refs/heads/master
 
-[branch]
-  # Always rebase with git pull. git pull --no-rebase to override.
-  autosetuprebase = always
 [push]
   default = simple
 
