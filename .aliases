@@ -41,7 +41,7 @@ alias gai='git apply --index'
 alias gundo='git reset --soft HEAD^'
 alias grepcommit='git log --pretty=oneline | grep'
 alias gti='echo "FIX YOUR SELF BEFORE YOU WRECK YOURSELF" && git'
-alias addnw='git diff -U0 -w --no-color "$@" | git apply --cached --ignore-whitespace --unidiff-zero -'
+alias addnw='git diff -U0 -w --no-color | git apply --cached --ignore-whitespace --unidiff-zero -'
 
 # Patch shortcuts
 #
@@ -65,11 +65,12 @@ alias capv='curl `pbpaste` | patch -p1 --dry-run'
 # Patch all files.
 alias pa='cat *.patch | patch -p1'
 
-# Drush aliases - look at http://drush.ws/examples/example.bashrc instead?
+# Drush aliases - look at https://raw.githubusercontent.com/drush-ops/drush/master/examples/example.bashrc instead?
 alias d='drush'
 alias dy='drush -y'
 alias dcc='drush cc all'
-alias dcr='drush cr'
+alias dd='ddev drush'
+alias ddy='ddev drush -y'
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
