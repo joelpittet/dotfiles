@@ -82,7 +82,6 @@ brew install php
 brew install ack
 brew install the_silver_searcher
 
-
 # Install languages packages.
 brew install node
 brew install perl
@@ -95,12 +94,17 @@ brew install mysql-client
 brew install rlwrap
 brew install sqlite
 
+# Install Web Dev Packages.
+brew install dnsmasq
+brew install drud/ddev/ddev
+brew install mkcert
+brew install sass/sass/sass
+
 # Install VCS.
 brew install git
 brew install subversion
 
 # Install other useful binaries.
-brew install dnsmasq
 brew install dos2unix
 brew install gnu-sed
 brew install gs
@@ -142,7 +146,6 @@ brew install zsh-syntax-highlighting
 # cmake
 # colordiff
 # dart-lang/dart/dart
-# drud/ddev/ddev
 # ghostscript
 # gnupg
 # httrack
@@ -176,7 +179,6 @@ brew install zsh-syntax-highlighting
 # bfg
 # casperjs
 # composer
-# dnsmasq
 # freetype
 # gdbm
 # gettext
