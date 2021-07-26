@@ -4,4 +4,4 @@ export PATH="$HOME/bin:/usr/local/bin:/usr/local/sbin:$PATH"
 # Add user's composer vendor bin to `$PATH`
 export PATH="$PATH:$HOME/.composer/vendor/bin"
 
-export PATH="$PATH:/Applications/DevDesktop/tools"
+export PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
