@@ -78,47 +78,111 @@ brew install php
 #brew install xpdf
 #brew install xz
 
-# Install other useful binaries.
+# Install grepping packages.
 brew install ack
-#brew install exiv2
+brew install the_silver_searcher
+
+# Install languages packages.
+brew install node
+brew install perl
+brew install php
+brew install python
+brew install ruby
+
+# Install database packages.
+brew install mysql-client
+brew install rlwrap
+brew install sqlite
+
+# Install Web Dev Packages.
+brew install dnsmasq
+brew install drud/ddev/ddev
+brew install mkcert
+brew install sass/sass/sass
+
+# Install VCS.
 brew install git
-# brew install git-lfs
+brew install subversion
+
+# Install other useful binaries.
+brew install dos2unix
+brew install gnu-sed
 brew install gs
 brew install imagemagick
+brew install ncdu
+brew install openconnect
+brew install patchutils
+brew install pdfgrep
+brew install pv
+brew install rbenv
+brew install rsync
+brew install ssh-copy-id
+brew install terminal-notifier
+brew install webkit2png
+brew install z
+brew install zsh-completions
+brew install zsh-syntax-highlighting
+#brew install exiv2
+# brew install git-lfs
 # brew install lua
 # brew install lynx
 #brew install p7zip
 #brew install pigz
-brew install pv
 #brew install rename
-#brew install rlwrap
-brew install ssh-copy-id
 #brew install tree
 #brew install vbindiff
 #brew install zopfli
 
-# Remove outdated versions from the cellar.
-brew cleanup
 
 
-brew install webkit2png
-brew install z
-
+# Work.
+#
+# adns
 # ansible
-# apr
-# apr-util
+# automake
+# autossh
+# bison
+# chruby
+# cmake
+# colordiff
+# dart-lang/dart/dart
+# ghostscript
+# gnupg
+# httrack
+# jansson
+# jenv
+# jq
+# markdown
+# maven
+# mcrypt
+# mistertea/et/et
+# mosh
+# ninja
+# openjdk@11
+# php@7.4
+# python@3.8
+# qt@5
+# ruby-install
+# sass/sass/sass
+# sassc
+# selenium-server-standalone
+# shellcheck
+# subversion
+# wp-cli
+
+
+# Original.
+# ansible
 # autoconf
 # bash
 # bash-completion
 # bfg
 # casperjs
 # composer
-# dnsmasq
 # freetype
 # gdbm
 # gettext
 # ghostscript
-# git
 # graphicsmagick
 # httpd24
 # icu4c
@@ -129,23 +193,15 @@ brew install z
 # makedepend
 # mcrypt
 # mhash
-# mod_fastcgi
-# mysql
-# node
 # nvm
 # openssl
 # pcre
-# perl
-# phantomjs
 # pkg-config
-# python
 # readline
-# ruby
 # sassc
 # slimerjs
-# sqlite
-# subversion
-# terminal-notifier
 # unixodbc
-# wget
 # xz
+
+# Remove outdated versions from the cellar.
+brew cleanup
