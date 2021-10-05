@@ -1,36 +1,34 @@
 #!/usr/bin/env bash
 
-
-# Make VIM the default editor
+# Make vim the default editor.
 export VISUAL=vim
 export EDITOR="$VISUAL"
 
 # Don’t clear the screen after quitting a manual page
 export MANPAGER="less -X"
 
-# Highlight section titles in manual pages
-export LESS_TERMCAP_md="$ORANGE"
+# Make Python use UTF-8 encoding for output to stdin, stdout, and stderr.
+export PYTHONIOENCODING='UTF-8';
 
-# Larger bash history (allow 32³ entries; default is 500)
-export HISTSIZE=32768
-export HISTFILESIZE=$HISTSIZE
-export HISTCONTROL=ignoredups
-# Make some commands not show up in history
-export HISTIGNORE="ll:ls:cd:cd -:pwd:exit:date:* --help"
+# Increase Bash history size. Allow 32³ entries; the default is 500.
+export HISTSIZE='32768';
+export HISTFILESIZE="${HISTSIZE}";
+# Omit duplicates and commands that begin with a space from history.
+export HISTCONTROL='ignoreboth';
 
-# Prefer US English and use UTF-8
-export LANG="en_US"
-export LC_ALL="en_US.UTF-8"
+# Prefer US English and use UTF-8.
+export LANG='en_US.UTF-8';
+export LC_ALL='en_US.UTF-8';
 
-# Highlight section titles in manual pages
-export LESS_TERMCAP_md="$ORANGE"
+# Highlight section titles in manual pages.
+export LESS_TERMCAP_md="${yellow}";
 
-# Don’t clear the screen after quitting a manual page
-export MANPAGER="less -X"
+# Don’t clear the screen after quitting a manual page.
+export MANPAGER='less -X';
 
-# Drush Launcher Fallback.
-# https://github.com/drush-ops/drush-launcher/#fallback
-export DRUSH_LAUNCHER_FALLBACK=~/bin/extras/drush/drush
+# Avoid issues with `gpg` as installed via Homebrew.
+# https://stackoverflow.com/a/42265848/96656
+export GPG_TTY=$(tty);
 
 # To link Rubies to Homebrew's OpenSSL 1.1 (which is upgraded) add the following
 export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
