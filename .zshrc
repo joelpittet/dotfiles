@@ -1,3 +1,6 @@
+gi# Forward through reverse search
+[[ $- == *i* ]] && stty -ixon
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -19,10 +22,8 @@ fi
 # Case insensitive file matching completion.
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Za-z}'
 
-
-#eval "$(starship init zsh)"
-
-source ~/powerlevel10k/powerlevel10k.zsh-theme
+source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
@@ -39,18 +40,18 @@ unset file
 # Append to the Bash history file, rather than overwriting it
 #shopt -s histappend
 
-# Autocorrect typos in path names when using `cd`
-#setopt correctall
-
-
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # SSH Agent
 ssh-add -A &> /dev/null
 
-# Forward through reverse search
-# stty -ixon
+# Z
+#source /usr/local/etc/profile.d/z.sh
+
+# CHRuby
+#source /usr/local/share/chruby/chruby.sh
+#source /usr/local/opt/chruby/share/chruby/auto.sh
 
 # Disable zsh globbing (using wildcards in commands)
 unsetopt nomatch
