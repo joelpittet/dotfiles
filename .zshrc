@@ -1,4 +1,4 @@
-gi# Forward through reverse search
+# Forward through reverse search
 [[ $- == *i* ]] && stty -ixon
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
