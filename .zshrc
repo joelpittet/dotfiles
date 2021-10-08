@@ -8,6 +8,12 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# A very fast Zsh Theme.
+source "$(brew --prefix)/opt/powerlevel10k/powerlevel10k.zsh-theme"
+
+# Fish shell like syntax highlighting for zsh.
+source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
 if type brew &>/dev/null; then
  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
 
@@ -21,9 +27,6 @@ fi
 
 # Case insensitive file matching completion.
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Za-z}'
-
-source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
@@ -51,12 +54,13 @@ unset file;
 # SSH Agent
 ssh-add -A &> /dev/null
 
-# Z
-#source /usr/local/etc/profile.d/z.sh
+# Z.
+source "$(brew --prefix)/etc/profile.d/z.sh"
 
-# CHRuby
-#source /usr/local/share/chruby/chruby.sh
-#source /usr/local/opt/chruby/share/chruby/auto.sh
+# CHRuby.
+source "$(brew --prefix)/opt/chruby/share/chruby/chruby.sh"
+# CHRuby switch based on .ruby-version files.
+source "$(brew --prefix)/opt/chruby/share/chruby/auto.sh"
 
 # Disable zsh globbing (using wildcards in commands)
 unsetopt nomatch
