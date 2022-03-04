@@ -23,8 +23,8 @@ brew install findutils
 # Install GNU `sed`, overwriting the built-in `sed`.
 brew install gnu-sed
 # Install a modern version of Bash.
-brew install bash
-brew install bash-completion2
+# brew install bash
+# brew install bash-completion2
 
 # Switch to using brew-installed bash as default shell
 #if ! fgrep -q "${BREW_PREFIX}/bin/bash" /etc/shells; then
@@ -113,7 +113,7 @@ brew install ncdu
 brew install openconnect
 brew install patchutils
 brew install pdfgrep
-brew install pv
+# brew install pv
 brew install rbenv
 brew install rsync
 brew install ssh-copy-id
@@ -137,36 +137,21 @@ brew install zsh-syntax-highlighting
 
 # Work.
 #
-# adns
 # ansible
-# automake
-# autossh
-# bison
 # chruby
-# cmake
 # colordiff
 # dart-lang/dart/dart
 # ghostscript
 # gnupg
 # httrack
-# jansson
-# jenv
 # jq
 # markdown
 # maven
 # mcrypt
-# mistertea/et/et
-# mosh
-# ninja
-# openjdk@11
-# php@7.4
-# python@3.8
-# qt@5
 # ruby-install
 # sass/sass/sass
 # sassc
 # selenium-server-standalone
-# shellcheck
 # subversion
 # wp-cli
 
