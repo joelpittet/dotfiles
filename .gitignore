@@ -19,12 +19,12 @@ Thumbs.db
 *.rej
 interdiff*.txt
 
-# Sass cache files.
+# Sass cache files
 .sass-cache
 
 # Projects
 .idea
 .project
 
-# Lock Files.
+# Lock Files
 .~lock*
