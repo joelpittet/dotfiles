@@ -4,20 +4,6 @@ Mathias Bynens’ dotfiles with Cottsers' tweaks and some personal tweaks.
 
 ## Notable features
 
-### Drush
-
-This repository includes Drush (latest dev version) as a git submodule. To update Drush, `cd` into your local `dotfiles` repository and run:
-
-```bash
-./drushup.sh
-```
-
-Then commit the changes (if any).
-
-### Brett Terpstra-esque bash prompt
-
-Includes a slightly tweaked version of the [useful and good-looking prompt](http://brettterpstra.com/my-new-favorite-bash-prompt/) posted by Brett Terpstra in 2009. Follow the link to learn more about it. In short: full path displayed, current time, average CPU load for the past minute, git branch.
-
 ### Others
 
 #### Homebrew formulas
@@ -33,24 +19,22 @@ Adds a bunch of git and drush aliases. Some of these are muscle memory, some wil
 
 **Warning:** If you want to give these dotfiles a try, you should first fork this repository, review the code, and remove things you don’t want or need. Don’t blindly use my settings unless you know what that entails. Use at your own risk!
 
-### Using Git and the bootstrap script
+### Using Git
 
-You can clone the repository wherever you want. (I like to keep it in `~/dotfiles`.) The bootstrapper script will pull in the latest version and copy the files to your home folder.
+You can clone the repository wherever you want. (I like to keep it in `~/dotfiles`.)
 
 ```bash
-git clone https://github.com/joelpittet/dotfiles.git && cd dotfiles && source bootstrap.sh
+git clone https://github.com/joelpittet/dotfiles.git
+cd dotfiles
+./brew.sh
+# TODO script up a backup and explain stow --adopt .
+stow .
 ```
 
 To update, `cd` into your local `dotfiles` repository and then:
 
 ```bash
-source bootstrap.sh
-```
-
-Alternatively, to update while avoiding the confirmation prompt:
-
-```bash
-set -- -f; source bootstrap.sh
+git pull
 ```
 
 ### Git-free install
@@ -58,7 +42,7 @@ set -- -f; source bootstrap.sh
 To install these dotfiles without Git:
 
 ```bash
-cd; curl -#L https://github.com/joelpittet/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,bootstrap.sh,.osx,LICENSE-MIT.txt}
+cd; curl -#L https://github.com/joelpittet/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,.macos,LICENSE.txt}
 ```
 
 To update later on, just run that command again.

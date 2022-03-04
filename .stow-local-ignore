@@ -1,15 +1,16 @@
 init
 bin
 
-brew\.sh
-bootstrap\.sh
 
 \.DS_Store
 
-\.macos
 \.p10k.zsh
 \.vim/*
 \.vimrc
+
+# Shell scripts.
+brew\.sh
+\.macos
 
 # Git
 \.git
