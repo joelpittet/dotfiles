@@ -1,28 +1,18 @@
 init
 bin
+
 brew\.sh
 bootstrap\.sh
 
 \.DS_Store
-\.ackrc
-\.curlrc
-\.editorconfig
-\.gitattributes
-\.gitconfig
-\.gvimrc
-\.hgignore
-\.hushlogin
-\.inputrc
+
 \.macos
 \.p10k.zsh
-\.screenrc
 \.vim/*
 \.vimrc
-\.wgetrc
 
 # Git
 \.git
-\.gitignore
 
 # Documentation
 ^/README.*
