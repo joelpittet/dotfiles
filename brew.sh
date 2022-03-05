@@ -44,10 +44,18 @@ brew install gnupg
 # Install more recent versions of some macOS tools.
 brew install vim
 brew install grep
-brew install openssh
 brew install screen
-brew install php
 #brew install gmp
+
+# SSH.
+brew install openssh
+brew install rsync
+brew install ssh-copy-id
+
+# Tools.
+brew install gnu-sed
+brew install patchutils
+brew install ncdu
 
 # Install font tools.
 #brew tap bramstein/webfonttools
@@ -81,7 +89,7 @@ brew install php
 #brew install xpdf
 #brew install xz
 
-# Install grepping packages.
+# Grepping packages.
 brew install ack
 brew install the_silver_searcher
 
@@ -103,28 +111,32 @@ brew install drud/ddev/ddev
 brew install mkcert
 brew install sass/sass/sass
 
-# Install VCS.
+# VCS.
 brew install git
 brew install subversion
 
+# Shell.
+brew install zsh
+brew install zsh-completions
+brew install zsh-syntax-highlighting
+brew install powerlevel10k
+
+# Casks.
+brew install sublime-text
+brew install obsidian
+
 # Install other useful binaries.
 brew install dos2unix
-brew install gnu-sed
 brew install gs
 brew install imagemagick
-brew install ncdu
 brew install openconnect
-brew install patchutils
 brew install pdfgrep
 # brew install pv
 brew install rbenv
-brew install rsync
-brew install ssh-copy-id
 brew install terminal-notifier
 brew install webkit2png
 brew install z
-brew install zsh-completions
-brew install zsh-syntax-highlighting
+
 #brew install exiv2
 # brew install git-lfs
 # brew install lua
@@ -135,8 +147,6 @@ brew install zsh-syntax-highlighting
 #brew install tree
 #brew install vbindiff
 #brew install zopfli
-
-
 
 # Work.
 #
@@ -172,7 +182,6 @@ brew install zsh-syntax-highlighting
 # gettext
 # ghostscript
 # graphicsmagick
-# httpd24
 # icu4c
 # imagemagick
 # jpeg
@@ -186,7 +195,6 @@ brew install zsh-syntax-highlighting
 # pcre
 # pkg-config
 # readline
-# sassc
 # slimerjs
 # unixodbc
 # xz
