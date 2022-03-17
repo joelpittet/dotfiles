@@ -119,7 +119,7 @@ brew install subversion
 brew install zsh
 brew install zsh-completions
 brew install zsh-syntax-highlighting
-brew install powerlevel10k
+brew install romkatv/powerlevel10k/powerlevel10k
 
 # Casks.
 brew install sublime-text
