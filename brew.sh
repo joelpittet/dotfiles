@@ -100,6 +100,9 @@ brew install php
 brew install python
 brew install ruby
 
+# Lanaguage Package managers.
+brew install chruby
+
 # Install database packages.
 brew install mysql-client
 brew install rlwrap
@@ -124,6 +127,15 @@ brew install romkatv/powerlevel10k/powerlevel10k
 # Casks.
 brew install sublime-text
 brew install obsidian
+brew install iterm2
+
+## DB clients.
+# brew install dbeaver-community
+# brew install sequel-pro
+
+## Communication Casks.
+# brew install microsoft-teams
+# brew install zoom
 
 # Install other useful binaries.
 brew install dos2unix
@@ -151,7 +163,6 @@ brew install z
 # Work.
 #
 # ansible
-# chruby
 # colordiff
 # dart-lang/dart/dart
 # ghostscript
@@ -165,7 +176,6 @@ brew install z
 # sass/sass/sass
 # sassc
 # selenium-server-standalone
-# subversion
 # wp-cli
 
 
