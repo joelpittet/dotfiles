@@ -211,3 +211,6 @@ brew install z
 
 # Remove outdated versions from the cellar.
 brew cleanup
+
+# compaudit will complain about insecure permissions, lock them down.
+chmod g-w $(brew --prefix)/share
