@@ -181,3 +181,8 @@ brew cleanup
 
 # compaudit will complain about insecure permissions, lock them down.
 chmod g-w $(brew --prefix)/share
+
+# Setup vim backup folder.
+[ -d $HOME/.vim/backups ] || mkdir $HOME/.vim/backups
+[ -d $HOME/.vim/swaps ] || mkdir $HOME/.vim/swaps
+[ -d $HOME/.vim/undo ] || mkdir $HOME/.vim/undo
