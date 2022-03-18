@@ -102,6 +102,7 @@ brew install ruby
 
 # Lanaguage Package managers.
 brew install chruby
+brew install rbenv
 
 # Install database packages.
 brew install mysql-client
@@ -137,14 +138,16 @@ brew install iterm2
 # brew install microsoft-teams
 # brew install zoom
 
+## Security casks.
+# brew install little-snitch
+# brew install micro-snitch
+
 # Install other useful binaries.
 brew install dos2unix
 brew install gs
-brew install imagemagick
 brew install openconnect
 brew install pdfgrep
 # brew install pv
-brew install rbenv
 brew install terminal-notifier
 brew install webkit2png
 brew install z
@@ -182,30 +185,19 @@ brew install z
 # Original.
 # ansible
 # autoconf
-# bash
-# bash-completion
 # bfg
-# casperjs
-# composer
 # freetype
 # gdbm
 # gettext
 # ghostscript
-# graphicsmagick
-# icu4c
-# imagemagick
-# jpeg
 # libevent
-# little-cms2
 # makedepend
-# mcrypt
 # mhash
 # nvm
 # openssl
 # pcre
 # pkg-config
 # readline
-# slimerjs
 # unixodbc
 # xz
 
