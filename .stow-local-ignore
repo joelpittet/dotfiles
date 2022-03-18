@@ -4,6 +4,7 @@ init
 
 # Shell scripts.
 brew\.sh
+composer-installer\.sh
 \.macos
 
 # Git
