@@ -163,6 +163,9 @@
   # https://help.github.com/articles/signing-commits-using-gpg/
   #gpgsign = true
 
+[pull]
+  rebase = false
+
 [diff]
 
   # Detect copies as well as renames.
@@ -192,6 +195,3 @@
   push = HEAD
 [http]
   sslVerify = false
-[user]
-	email = pittet@cs.ubc.ca
-	name = Joël Pittet
