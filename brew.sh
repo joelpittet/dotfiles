@@ -56,7 +56,6 @@ brew install ncdu
 
 # Install some CTF tools; see https://github.com/ctfs/write-ups.
 #brew install aircrack-ng
-#brew install bfg
 #brew install binutils
 #brew install binwalk
 #brew install cifer
@@ -116,33 +115,35 @@ brew install zsh-syntax-highlighting
 brew install romkatv/powerlevel10k/powerlevel10k
 
 # Casks.
-brew install sublime-text
-brew install obsidian
-brew install iterm2
-# brew install utm
-# brew install rectangle
-# brew install maven
-# brew install kaleidoscope
+brew install --cask sublime-text
+brew install --cask obsidian
+brew install --cask iterm2
+# brew install --cask utm
+# brew install --cask rectangle
+# brew install --cask maven
+# brew install --cask kaleidoscope
+# brew install --cask soulver
 
 ## DB clients.
-# brew install dbeaver-community
-# brew install sequel-pro
+# brew install --cask dbeaver-community
+# brew install --cask sequel-pro
 
 ## Communication Casks.
-# brew install microsoft-teams
-# brew install zoom
-# brew install slack
-# brew install discord
+# brew install --cask microsoft-teams
+# brew install --cask zoom
+# brew install --cask slack
+# brew install --cask discord
 
 ## Security casks.
-# brew install little-snitch
-# brew install micro-snitch
+# brew install --cask little-snitch
+# brew install --cask micro-snitch
 
 # Install other useful binaries.
 brew install dos2unix
 brew install gs
 brew install openconnect
 brew install pdfgrep
+brew install readline
 # brew install pv
 brew install terminal-notifier
 brew install webkit2png
@@ -153,6 +154,8 @@ brew install z
 
 
 # Work.
+brew install bfg
+
 
 # ansible
 # colordiff
@@ -170,11 +173,9 @@ brew install z
 # Original.
 
 # ansible
-# bfg
 # nvm
 # openssl
 # pcre
-# readline
 
 # Remove outdated versions from the cellar.
 brew cleanup
