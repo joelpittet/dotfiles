@@ -192,3 +192,6 @@
   push = HEAD
 [http]
   sslVerify = false
+[user]
+	email = pittet@cs.ubc.ca
+	name = Joël Pittet
