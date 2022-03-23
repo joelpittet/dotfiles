@@ -36,6 +36,7 @@ brew install gnupg
 brew install vim
 brew install grep
 brew install screen
+brew install tmux
 #brew install gmp
 
 # Fonts
@@ -113,36 +114,40 @@ brew install zsh-syntax-highlighting
 brew install romkatv/powerlevel10k/powerlevel10k
 
 # Casks.
-brew install --cask sublime-text
-brew install --cask obsidian
 brew install --cask iterm2
-# brew install --cask utm
-# brew install --cask rectangle
-# brew install --cask maven
+brew install --cask obsidian
+brew install --cask sublime-text
+# brew install --cask apache-directory-studio
 # brew install --cask kaleidoscope
+# brew install --cask maven
+# brew install --cask rectangle
 # brew install --cask soulver
+# brew install --cask utm
 
 ## DB clients.
 # brew install --cask dbeaver-community
 # brew install --cask sequel-pro
 
 ## Communication Casks.
-# brew install --cask microsoft-teams
-# brew install --cask zoom
-# brew install --cask slack
 # brew install --cask discord
+# brew install --cask microsoft-teams
+# brew install --cask slack
+# brew install --cask zoom
 
 ## Security casks.
 # brew install --cask little-snitch
 # brew install --cask micro-snitch
 
 # Install other useful binaries.
+brew install ansible
+brew install bfg
+brew install colordiff
 brew install dos2unix
 brew install gs
+brew install htop
 brew install openconnect
 brew install pdfgrep
 brew install readline
-# brew install pv
 brew install terminal-notifier
 brew install webkit2png
 brew install z
@@ -152,25 +157,18 @@ brew install z
 
 
 # Work.
-brew install bfg
-
-
-# ansible
-# colordiff
-# dart-lang/dart/dart
-# gnupg
-# httrack
-# jq
-# markdown
-# mcrypt
-# ruby-install
-# selenium-server-standalone
-# wp-cli
+# brew install pv
+# brew install dart-lang/dart/dart
+# brew install gnupg
+# brew install httrack
+# brew install jq
+# brew install markdown
+# brew install mcrypt
+# brew install ruby-install
+# brew install wp-cli
 
 
 # Original.
-
-# ansible
 # nvm
 # openssl
 # pcre
