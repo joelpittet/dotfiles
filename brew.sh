@@ -38,6 +38,10 @@ brew install grep
 brew install screen
 #brew install gmp
 
+# Fonts
+brew tap homebrew/cask-fonts
+brew install font-office-code-pro
+
 # SSH.
 brew install openssh
 brew install rsync
@@ -47,12 +51,6 @@ brew install ssh-copy-id
 brew install gnu-sed
 brew install patchutils
 brew install ncdu
-
-# Install font tools.
-#brew tap bramstein/webfonttools
-#brew install sfnt2woff
-#brew install sfnt2woff-zopfli
-#brew install woff2
 
 # Install some CTF tools; see https://github.com/ctfs/write-ups.
 #brew install aircrack-ng
