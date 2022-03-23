@@ -195,3 +195,5 @@
   push = HEAD
 [http]
   sslVerify = false
+[init]
+  defaultBranch = main
