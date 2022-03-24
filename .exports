@@ -37,33 +37,7 @@ export GPG_TTY=$(tty);
 # To link Rubies to Homebrew's OpenSSL 1.1 (which is upgraded) add the following
 export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 
-# NVM config.
-export NVM_DIR="$HOME/.nvm"
-# [ -s "$NVM_DIR/nvm.sh" ] && time \. "$NVM_DIR/nvm.sh"  # This loads nvm
-# #[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-lazynvm() {
-  unset -f nvm node npm npx
-  export NVM_DIR=~/.nvm
-  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-}
-
-nvm() {
-  lazynvm
-  nvm $@
-}
-
-node() {
-  lazynvm
-  node $@
-}
-
-npm() {
-  lazynvm
-  npm $@
-}
-
-npx() {
-  lazynvm
-  npx $@
-}
+# Ruby config.
+export GEM_HOME="$HOME/.gem"
+eval "$(rbenv init - zsh)"
+export PATH="$HOME/.rbenv/bin:$PATH"
