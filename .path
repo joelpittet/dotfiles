@@ -18,7 +18,7 @@ export PATH="$(brew --prefix)/opt/php@7.4/sbin:$PATH"
 export PATH="$(brew --prefix)/opt/mysql-client/bin:$PATH"
 
 # Composer
-export PATH="$PATH:vendor/bin"
+# export PATH="$PATH:vendor/bin"
 # Add user's composer vendor bin to `$PATH`
 export PATH="$PATH:$HOME/.composer/vendor/bin"
 
@@ -31,3 +31,6 @@ export PATH="$(brew --prefix)/opt/ssh-copy-id/bin:$PATH"
 
 # GNU sed
 export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
+
+# GNU find, xargs, locate, and updatedb
+export PATH="$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH"
