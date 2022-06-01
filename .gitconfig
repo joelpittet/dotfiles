@@ -30,19 +30,23 @@
   remotes = remote -v
   # Credit an author on the latest commit
   credit = "!f() { git commit --amend --author \"$1 <$2>\" -C HEAD; }; f"
-  # Undo a `git push`
-  undopush = push -f origin HEAD^:master
 
-  # Merge Develop Into Master
-  mm = !git fetch --all && git checkout master && git pull && git merge develop --no-edit --no-ff && git push && git checkout develop && git merge master && git push
+  # Merge develop into main or master branch.
+  mm = !git fetch --all \
+    && git pull \
+    && ((git rev-parse --verify --quiet main && git checkout main) \
+    || (git rev-parse --verify --quiet master && git checkout master)) \
+    && git pull \
+    && git merge --no-edit --no-ff - \
+    && git push \
+    && git checkout - \
+    && git merge - \
+    && git push
 
   st = status
   ci = commit
   br = branch
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ci)%C(bold blue)<%an>%Creset' --abbrev-commit
-  
-  # Switch to a branch, creating it if necessary.
-  go = "!f() { git checkout -b \"$1\" 2> /dev/null || git checkout \"$1\"; }; f"
 
   # Show verbose output about tags, branches or remotes
   tags = tag -l
