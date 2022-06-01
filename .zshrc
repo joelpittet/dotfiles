@@ -54,8 +54,8 @@ unset file;
 # SSH Agent
 ssh-add -A &> /dev/null
 
-# Z.
-source "$(brew --prefix)/etc/profile.d/z.sh"
+# Zoxide.
+eval "$(zoxide init zsh)"
 
 # CHRuby.
 source "$(brew --prefix)/opt/chruby/share/chruby/chruby.sh"
