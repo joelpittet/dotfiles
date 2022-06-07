@@ -20,10 +20,7 @@
 
   # Commit all changes.
   ca = !git add -A && git commit -av
-  # Checkout
-  co = checkout
-  # Switch to a branch, creating it if necessary
-  go = checkout -B
+
   # Show verbose output about tags, branches or remotes
   tags = tag -l
   branches = branch -a
@@ -31,22 +28,62 @@
   # Credit an author on the latest commit
   credit = "!f() { git commit --amend --author \"$1 <$2>\" -C HEAD; }; f"
 
-  # Merge develop into main or master branch.
-  mm = !git fetch --all \
-    && git pull \
-    && ((git rev-parse --verify --quiet main && git checkout main) \
-    || (git rev-parse --verify --quiet master && git checkout master)) \
-    && git pull \
-    && git merge --no-edit --no-ff - \
-    && git push \
-    && git checkout - \
-    && git merge - \
-    && git push
-
   st = status
+  co = checkout
+  sw = switch
   ci = commit
   br = branch
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ci)%C(bold blue)<%an>%Creset' --abbrev-commit
+
+  #
+  # Branch workflow
+  #
+  # Switch to production branch.
+  sp = !(([[ -n "$(git rev-parse --verify --quiet main)" ]] && git switch main) \
+      || ([[ -n "$(git rev-parse --verify --quiet master)" ]] && git switch master))
+
+  # Create a topic branch from an up-to-date main/master branch.
+  # Based on https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow
+  tb = "!f() { \
+    git sp \
+    && git pull \
+    && git switch -c $1; \
+    }; f"
+
+  # Merge branch into main/master branch and switch back.
+  mm = !export BRANCH=$(git branch --show-current) \
+    && git fetch --all \
+    && echo "🚀 Merging $BRANCH into the production branch" \
+    && git sp \
+    && git pull \
+    && git merge --no-edit --no-ff - \
+    && git push \
+    && git switch -
+
+  # Merge develop branch into main/master branch and switch back.
+  md = !git switch develop\
+    && git pull \
+    && git mm \
+    && echo "🚀 Merging the production branch back into the develop branch" \
+    && git merge - \
+    && git push
+
+  # Merge branch into main/master and develop branches.
+  mb = !git mm \
+    && echo "🧑‍🍳 Merging $BRANCH into the develop branch" \
+    && git switch develop \
+    && git pull \
+    && git merge --no-edit --no-ff - \
+    && git push
+
+  # Delete topic branch local and remote.
+  db = "!f() { \
+    echo "🔥 Deleting local and remote topic branch: $1" \
+    && git branch -d $1; \
+    git push origin --delete $1; \
+    }; f"
+
+
 
   # Show verbose output about tags, branches or remotes
   tags = tag -l
@@ -69,7 +106,7 @@
   retag = "!r() { git tag -d $1 && git push origin :refs/tags/$1 && git tag $1; }; r"
 
   # Find branches containing commit
-  fb = "!f() { git branch -a --contains $1; }; f"
+  #fb = "!f() { git branch -a --contains $1; }; f"
 
   # Find tags containing commit
   ft = "!f() { git describe --always --contains $1; }; f"
@@ -137,41 +174,26 @@
 [push]
   default = simple
 
-[color]
-
-  # Use colors in Git commands that are capable of colored output when
-  # outputting to the terminal. (This is the default setting in Git ≥ 1.8.4.)
-  ui = auto
-
 [color "branch"]
-
   current = yellow reverse
   local = yellow
   remote = green
 
 [color "diff"]
-
   meta = yellow bold
   frag = magenta bold # line info
   old = red # deletions
   new = green # additions
 
 [color "status"]
-
   added = yellow
   changed = green
   untracked = cyan
-
-[commit]
-
-  # https://help.github.com/articles/signing-commits-using-gpg/
-  #gpgsign = true
 
 [pull]
   rebase = false
 
 [diff]
-
   # Detect copies as well as renames.
   renames = copies
 
@@ -202,4 +224,4 @@
 [init]
   defaultBranch = main
 [fetch]
-	prune = true
+  prune = true
