@@ -26,6 +26,9 @@ export PATH="$PATH:$HOME/.composer/vendor/bin"
 # https://github.com/rbenv/rbenv
 #export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
+# Java using jenv, see .exports
+#export PATH="$(brew --prefix)/opt/openjdk@11/bin:$PATH"
+
 # SSH Copy ID
 export PATH="$(brew --prefix)/opt/ssh-copy-id/bin:$PATH"
 
