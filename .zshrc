@@ -21,10 +21,6 @@ if type brew &>/dev/null; then
  compinit
 fi
 
-# autoload -Uz compinit && compinit
-# zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
-# fpath=(~/.zsh $fpath)
-
 # Case insensitive file matching completion.
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Za-z}'
 
