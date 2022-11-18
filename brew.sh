@@ -55,7 +55,6 @@ brew install ncdu
 
 # Install some CTF tools; see https://github.com/ctfs/write-ups.
 #brew install aircrack-ng
-#brew install binutils
 #brew install binwalk
 #brew install cifer
 #brew install dex2jar
@@ -64,7 +63,6 @@ brew install ncdu
 #brew install foremost
 #brew install hashpump
 #brew install hydra
-#brew install john
 #brew install knock
 #brew install netpbm
 #brew install nmap
@@ -158,7 +156,6 @@ brew install z
 
 # Work.
 # brew install pv
-# brew install dart-lang/dart/dart
 # brew install gnupg
 # brew install httrack
 # brew install jq
