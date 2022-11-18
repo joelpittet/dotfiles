@@ -53,6 +53,7 @@
   # Merge branch into main/master branch and switch back.
   mm = !export BRANCH=$(git branch --show-current) \
     && git fetch --all \
+    && git push \
     && echo "🚀 Merging $BRANCH into the production branch" \
     && git sp \
     && git pull \
