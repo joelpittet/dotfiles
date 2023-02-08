@@ -192,7 +192,7 @@
   untracked = cyan
 
 [pull]
-  rebase = false
+  rebase = true
 
 [diff]
   # Detect copies as well as renames.
