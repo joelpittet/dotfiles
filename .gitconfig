@@ -84,8 +84,6 @@
     git push origin --delete $1; \
     }; f"
 
-
-
   # Show verbose output about tags, branches or remotes
   tags = tag -l
   branches = branch --all
@@ -172,8 +170,24 @@
   # Automatically correct typos after 3 seconds (30 deciseconds)
   autocorrect = 30
 
+[fetch]
+  prune = true
+
+[pull]
+  rebase = true
+
 [push]
   default = simple
+
+[remote "origin"]
+  push = HEAD
+
+[http]
+  sslVerify = false
+
+[init]
+  # Set the default branch name.
+  defaultBranch = main
 
 [color "branch"]
   current = yellow reverse
@@ -191,25 +205,22 @@
   changed = green
   untracked = cyan
 
-[pull]
-  rebase = true
-
-[diff]
-  # Detect copies as well as renames.
-  renames = copies
-
-[diff "bin"]
-
-  # Use `hexdump` to diff binary files.
-  textconv = hexdump -v -C
+[difftool]
+  prompt = false
 
 # Kaleidoscope.app as difftool and mergetool.
 [difftool "Kaleidoscope"]
   cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
+
 [diff]
   tool = Kaleidoscope
-[difftool]
-  prompt = false
+  # Detect copies as well as renames.
+  renames = copies
+
+[diff "bin"]
+  # Use `hexdump` to diff binary files.
+  textconv = hexdump -v -C
+
 [mergetool "Kaleidoscope"]
   cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot
   trustExitCode = true
@@ -218,11 +229,3 @@
   keepBackup = false
 [merge]
   tool = Kaleidoscope
-[remote "origin"]
-  push = HEAD
-[http]
-  sslVerify = false
-[init]
-  defaultBranch = main
-[fetch]
-  prune = true
