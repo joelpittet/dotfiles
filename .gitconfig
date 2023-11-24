@@ -207,6 +207,7 @@
 
 [difftool]
   prompt = false
+  trustExitCode = true
 
 # Kaleidoscope.app as difftool and mergetool.
 [difftool "Kaleidoscope"]
