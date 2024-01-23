@@ -15,11 +15,15 @@ source "$(brew --prefix)/opt/powerlevel10k/powerlevel10k.zsh-theme"
 source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 if type brew &>/dev/null; then
- FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
 
- autoload -Uz compinit
- compinit
+  autoload -Uz compinit
+  compinit
 fi
+
+# Auto autosuggestions.
+source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
 
 # Case insensitive file matching completion.
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Za-z}'
@@ -71,7 +75,3 @@ fi
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
