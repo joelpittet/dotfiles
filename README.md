@@ -4,12 +4,15 @@ Mathias Bynens’ dotfiles with Cottsers' tweaks and some personal tweaks.
 
 ## Notable features
 
+- Uses `zsh`.
+- Using `stow` to help manage symlinks to the git repo.
+
+
 ### Others
 
 #### Homebrew formulas
 
 * [z](https://github.com/rupa/z) - A fuzzy way to navigate directories on the command line.
-* [git-ftp](https://github.com/resmo/git-ftp) - Deploy to (S)FTP from your local git repositories.
 
 #### Aliases
 
@@ -57,18 +60,12 @@ Here’s an example `~/.path` file that adds `/usr/local/bin` to the `$PATH`:
 export PATH="/usr/local/bin:$PATH"
 ```
 
-### Add custom commands without creating a new fork
-
-If `~/.extra` exists, it will be sourced along with the other files. You can use this to add a few custom commands without the need to fork this entire repository, or to add commands you don’t want to commit to a public repository.
-
-My `~/.extra` looks something like this:
-
 ```bash
 # Git credentials
-GIT_AUTHOR_NAME="Joel Pittet"
+GIT_AUTHOR_NAME="Your Name"
 GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
 git config --global user.name "$GIT_AUTHOR_NAME"
-GIT_AUTHOR_EMAIL="joel@pittet.ca"
+GIT_AUTHOR_EMAIL="YOUR.EMAIL@example.org"
 GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
 git config --global user.email "$GIT_AUTHOR_EMAIL"
 ```
