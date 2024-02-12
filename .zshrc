@@ -9,7 +9,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # A very fast Zsh Theme.
-source "$(brew --prefix)/opt/powerlevel10k/powerlevel10k.zsh-theme"
+source "$(brew --prefix)/share/powerlevel10k/powerlevel10k.zsh-theme"
 
 # Fish shell like syntax highlighting for zsh.
 source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
