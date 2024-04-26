@@ -12,7 +12,6 @@ alias ........="cd ../../../../../../.."
 # Shortcuts
 alias g="git"
 alias h="history"
-alias v="vagrant"
 alias o="open"
 alias oo="open ."
 
@@ -27,21 +26,21 @@ alias cua="composer update -n --with-all-dependencies"
 alias gba='git branch -a'
 alias gc='git commit -v'
 alias gca='git commit -v -a'
+
 alias gd='git diff | $EDITOR'
 alias gds='git diff --staged | $EDITOR'
-alias gl='git pull'
-alias gp='git push'
-alias gfp='git ftp push'
-alias gpa='git ftp push; git push'
-alias glog='git log'
+
 alias gst='git status'
 alias ga='git add -i'
+
 alias gav='git apply -v'
 alias gai='git apply --index'
+
 alias gundo='git reset --soft HEAD^'
 alias grepcommit='git log --pretty=oneline | grep'
-alias gti='echo "FIX YOUR SELF BEFORE YOU WRECK YOURSELF" && git'
 alias addnw='git diff -U0 -w --no-color | git apply --cached --ignore-whitespace --unidiff-zero -'
+
+alias gti='echo "FIX YOUR SELF BEFORE YOU WRECK YOURSELF" && git'
 
 # Patch shortcuts
 #
@@ -68,7 +67,8 @@ alias pa='cat *.patch | patch -p1'
 # Drush aliases - look at https://raw.githubusercontent.com/drush-ops/drush/master/examples/example.bashrc instead?
 alias d='drush'
 alias dy='drush -y'
-alias dcc='drush cc all'
+
+# DDEV Drush aliases
 alias dd='ddev drush'
 alias ddy='ddev drush -y'
 
@@ -141,18 +141,9 @@ alias c="tr -d '\n' | pbcopy"
 # Recursively delete `.DS_Store` files
 alias cleanup="find . -type f -name '*.DS_Store' -ls -delete"
 
-# Empty the Trash on all mounted volumes and the main HDD.
-# Also, clear Apple’s System Logs to improve shell startup speed.
-# Finally, clear download history from quarantine. https://mths.be/bum
-alias emptytrash="sudo rm -rfv /Volumes/*/.Trashes; sudo rm -rfv ~/.Trash; sudo rm -rfv /private/var/log/asl/*.asl; sqlite3 ~/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV* 'delete from LSQuarantineEvent'"
-
 # Show/hide hidden files in Finder
 alias show="defaults write com.apple.finder AppleShowAllFiles -bool true && killall Finder"
 alias hide="defaults write com.apple.finder AppleShowAllFiles -bool false && killall Finder"
-
-# Hide/show all desktop icons (useful when presenting)
-alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
-alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
 # URL-encode strings
 alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
@@ -169,9 +160,6 @@ alias spoton="sudo mdutil -a -i on"
 # PlistBuddy alias, because sometimes `defaults` just doesn’t cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
 
-# Airport CLI alias
-alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
-
 # Intuitive map function
 # For example, to list all directories that contain a certain file:
 # find . -name .gitattributes | map dirname
@@ -185,9 +173,6 @@ done
 # Stuff I never really use but cannot delete either because of http://xkcd.com/530/
 alias stfu="osascript -e 'set volume output muted true' && echo 'shhh! I am trying to sleep!'"
 alias pumpitup="osascript -e 'set volume 7' && echo 'Dialed to 11!'"
-
-# Lock the screen (when going AFK)
-alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
 
 # Reload the shell (i.e. invoke as a login shell)
 alias reload="exec ${SHELL} -l"

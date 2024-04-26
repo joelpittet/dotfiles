@@ -11,8 +11,8 @@ export PATH="$HOME/bin:/usr/local/bin:/usr/local/sbin:$PATH"
 export PATH="$HOME/.symfony/bin:$PATH"
 
 # PHP
-export PATH="$(brew --prefix)/opt/php@8.1/bin:$PATH"
-export PATH="$(brew --prefix)/opt/php@8.1/sbin:$PATH"
+export PATH="$(brew --prefix)/opt/php/bin:$PATH"
+export PATH="$(brew --prefix)/opt/php/sbin:$PATH"
 
 # MySQL client
 export PATH="$(brew --prefix)/opt/mysql-client/bin:$PATH"
