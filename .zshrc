@@ -24,7 +24,6 @@ fi
 # Auto autosuggestions.
 source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
-
 # Case insensitive file matching completion.
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Za-z}'
 

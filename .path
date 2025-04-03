@@ -6,6 +6,9 @@ export PATH="$HOME/bin:/usr/local/bin:/usr/local/sbin:$PATH"
 
 # Python
 # export PATH="$HOME/Library/Python/3.9/bin:$PATH"
+# pipx
+export PATH="$HOME/.local/bin:$PATH"
+
 
 # Symfony
 export PATH="$HOME/.symfony/bin:$PATH"
