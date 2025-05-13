@@ -209,12 +209,24 @@
   prompt = false
   trustExitCode = true
 
+
+# External Diff & Merge tool.
+[diff]
+tool = araxis
+
+[merge]
+tool = araxis
+
+[alias]
+ad = difftool --tool=araxis --dir-diff
+ads = difftool --tool=araxis --dir-diff --staged
+
 # Kaleidoscope.app as difftool and mergetool.
-[difftool "Kaleidoscope"]
-  cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
+#[difftool "Kaleidoscope"]
+#  cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
 
 [diff]
-  tool = Kaleidoscope
+ # tool = Kaleidoscope
   # Detect copies as well as renames.
   renames = copies
 
@@ -222,11 +234,11 @@
   # Use `hexdump` to diff binary files.
   textconv = hexdump -v -C
 
-[mergetool "Kaleidoscope"]
-  cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot
-  trustExitCode = true
+#[mergetool "Kaleidoscope"]
+#  cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot
+#  trustExitCode = true
 [mergetool]
   prompt = false
   keepBackup = false
-[merge]
-  tool = Kaleidoscope
+#[merge]
+#  tool = Kaleidoscope
