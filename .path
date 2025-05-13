@@ -43,3 +43,6 @@ export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
 
 # GNU find, xargs, locate, and updatedb
 export PATH="$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH"
+
+# GNU patch
+export PATH="$(brew --prefix)/opt/gpatch/libexec/gnubin:$PATH"
