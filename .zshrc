@@ -35,14 +35,33 @@ for file in ~/.{path,exports,aliases,functions,extra}; do
 done;
 unset file;
 
+#
+# History
+#
+# Save the history after each command
+setopt inc_append_history
+
+# Share history across sessions
+setopt share_history
+
+# Don't store duplicate commands
+setopt hist_ignore_dups
+
+# Don't store commands that start with a space
+setopt hist_ignore_space
+
+# Append rather than overwrite history file
+setopt append_history
+
+#
+# Path correcting.
+#
+
 # Case-insensitive globbing (used in pathname expansion)
-#shopt -s nocaseglob
+setopt nocaseglob
 
-# Append to the Bash history file, rather than overwriting it
-#shopt -s histappend
-
-# Autocorrect typos in path names when using `cd`
-# shopt -s cdspell;
+# Autocorrect minor typos in path names when using `cd`.
+setopt correct
 
 # Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
 # [ -e "$HOME/.ssh/config" ] && complete -o "default" -o "nospace" -W "$(grep "^Host" ~/.ssh/config | grep -v "[?*]" | cut -d " " -f2- | tr ' ' '\n')" scp sftp ssh;
