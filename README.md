@@ -2,7 +2,7 @@
 
 Mathias Bynens’ dotfiles with Cottsers' tweaks and some personal tweaks.
 
-## Notable features
+## Features
 
 - Uses `zsh`.
 - Using `stow` to help manage symlinks to the git repo.
@@ -48,7 +48,7 @@ To install these dotfiles without Git:
 cd; curl -#L https://github.com/joelpittet/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,.macos,LICENSE.txt}
 ```
 
-To update later on, just run that command again.
+To update later, simply run the same command again.
 
 ### Specify the `$PATH`
 
@@ -65,7 +65,7 @@ export PATH="/usr/local/bin:$PATH"
 GIT_AUTHOR_NAME="Your Name"
 GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
 git config --global user.name "$GIT_AUTHOR_NAME"
-GIT_AUTHOR_EMAIL="YOUR.EMAIL@example.org"
+GIT_AUTHOR_EMAIL="your.email@example.org"
 GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
 git config --global user.email "$GIT_AUTHOR_EMAIL"
 ```
@@ -94,6 +94,7 @@ Some of the functionality of these dotfiles depends on formulae installed by `br
 
 [Ping me on Twitter](http://twitter.com/joelpittet).
 
-## Thanks to…
+## Thanks
 
-* [Mathias Bynens](http://mathiasbynens.be/) for providing a [great base to work from](https://github.com/mathiasbynens/dotfiles)!
+* [Mathias Bynens](http://mathiasbynens.be/) for providing an [excellent foundation](https://github.com/mathiasbynens/dotfiles)
+* The open-source community for continuous improvements and inspiration
