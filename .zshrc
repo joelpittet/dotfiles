@@ -8,21 +8,20 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-$(brew --prefix)}"
+
 # A very fast Zsh Theme.
-source "$(brew --prefix)/share/powerlevel10k/powerlevel10k.zsh-theme"
+source "${HOMEBREW_PREFIX}/share/powerlevel10k/powerlevel10k.zsh-theme"
 
 # Fish shell like syntax highlighting for zsh.
-source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-
-if type brew &>/dev/null; then
-  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
-
-  autoload -Uz compinit
-  compinit
-fi
+source "${HOMEBREW_PREFIX}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # Auto autosuggestions.
-source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source "${HOMEBREW_PREFIX}/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+FPATH="${HOMEBREW_PREFIX}/share/zsh-completions:${FPATH}"
+autoload -Uz compinit
+compinit
 
 # Case insensitive file matching completion.
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Za-z}'
@@ -76,9 +75,9 @@ ssh-add -A &> /dev/null
 eval "$(zoxide init zsh)"
 
 # CHRuby.
-source "$(brew --prefix)/opt/chruby/share/chruby/chruby.sh"
+source "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/chruby.sh"
 # CHRuby switch based on .ruby-version files.
-source "$(brew --prefix)/opt/chruby/share/chruby/auto.sh"
+source "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/auto.sh"
 
 # Disable zsh globbing (using wildcards in commands)
 unsetopt nomatch
