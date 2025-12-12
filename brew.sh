@@ -41,7 +41,7 @@ brew install tmux
 
 # Fonts
 brew tap homebrew/cask-fonts
-brew install font-office-code-pro
+brew install --cask font-office-code-pro
 
 # SSH.
 brew install openssh
@@ -49,7 +49,6 @@ brew install rsync
 brew install ssh-copy-id
 
 # Tools.
-brew install gnu-sed
 brew install patchutils
 brew install ncdu
 
@@ -97,7 +96,7 @@ brew install sqlite
 
 # Install Web Dev Packages.
 brew install dnsmasq
-brew install drud/ddev/ddev
+brew install ddev/ddev/ddev
 brew install mkcert
 brew install sass/sass/sass
 
@@ -141,14 +140,14 @@ brew install ansible
 brew install bfg
 brew install colordiff
 brew install dos2unix
-brew install gs
+brew install ghostscript
 brew install htop
 brew install openconnect
 brew install pdfgrep
 brew install readline
 brew install terminal-notifier
 brew install webkit2png
-brew install z
+brew install zoxide
 
 # brew install lua
 #brew install tree
