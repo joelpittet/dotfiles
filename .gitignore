@@ -28,6 +28,7 @@ interdiff*.txt
 # Projects
 .idea
 .project
+.vscode
 
 # Lock Files
 .~lock*
