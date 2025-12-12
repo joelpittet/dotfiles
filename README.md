@@ -1,67 +1,107 @@
-# joelpittet’s dotfiles
+# joelpittet's dotfiles
 
-Mathias Bynens’ dotfiles with Cottsers' tweaks and some personal tweaks.
+A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://github.com/mathiasbynens/dotfiles) with personal customizations and improvements.
 
 ## Features
 
-- Uses `zsh`.
-- Using `stow` to help manage symlinks to the git repo.
+- **Shell**: Uses `zsh` with custom configurations
+- **Package Management**: Uses `stow` to manage symlinks to the git repository
+- **Homebrew Integration**: Automated installation of useful formulae
+- **Git Aliases**: Comprehensive set of git and drush aliases for improved workflow
+- **macOS Defaults**: Sensible macOS system preferences and settings
 
+## What's Included
 
-### Others
+### Command Line Tools
+- [z](https://github.com/rupa/z) - Fuzzy directory navigation
+- Custom aliases for git, drush, and common commands
+- Enhanced shell functions and utilities
 
-#### Homebrew formulas
-
-* [z](https://github.com/rupa/z) - A fuzzy way to navigate directories on the command line.
-
-#### Aliases
-
-Adds a bunch of git and drush aliases. Some of these are muscle memory, some will eventually be removed because I never use them.
+### Configuration Files
+- Shell configuration (`.zshrc`, `.exports`, `.functions`)
+- Git configuration (`.gitconfig`, `.gitignore`)
+- Editor configuration (`.editorconfig`)
+- macOS system preferences (`.macos`)
 
 ## Installation
 
-**Warning:** If you want to give these dotfiles a try, you should first fork this repository, review the code, and remove things you don’t want or need. Don’t blindly use my settings unless you know what that entails. Use at your own risk!
+**Warning:** If you want to give these dotfiles a try, you should first fork this repository, review the code, and remove things you don't want or need. Don't blindly use my settings unless you know what that entails. Use at your own risk!
 
-### Using Git
+### Prerequisites
 
-You can clone the repository wherever you want. (I like to keep it in `~/dotfiles`.)
+- macOS with Xcode Command Line Tools installed:
+  ```bash
+  xcode-select --install
+  ```
+- [Homebrew](https://brew.sh/) installed (required for `./brew.sh` and most tooling)
+- GNU Stow installed (optional if you run `./brew.sh`, since it installs `stow`)
 
-```bash
-git clone https://github.com/joelpittet/dotfiles.git
-cd dotfiles
-./brew.sh
-# TODO script up a backup and explain stow --adopt .
-stow .
-```
+### Quick Start
 
-To update, `cd` into your local `dotfiles` repository and then:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/joelpittet/dotfiles.git ~/dotfiles
+   cd ~/dotfiles
+   ```
 
-```bash
-git pull
-```
+2. Install Homebrew formulae:
+   ```bash
+   ./brew.sh
+   ```
 
-### Git-free install
+3. Create symlinks using stow (from inside the repo):
+   ```bash
+   stow --target="$HOME" .
+   ```
 
+   **Notes:**
+   - If you have existing dotfiles, back them up first (or use `stow --adopt .` to adopt existing files into the repo).
+   - `stow` will link most files in this repo into `$HOME`; exclusions are defined in `.stow-local-ignore`.
+   - Prefer stowing specific areas if you want a smaller footprint (example: `stow --target="$HOME" zsh`).
+
+### Alternative Installation Methods
+
+#### Git-free Install
 To install these dotfiles without Git:
 
 ```bash
 cd; curl -#L https://github.com/joelpittet/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,.macos,LICENSE.txt}
 ```
 
-To update later, simply run the same command again.
+**Caution:** This extracts directly into your home directory and may overwrite existing files. Back up any existing dotfiles first and consider inspecting the archive contents (`tar -tz ...`) before extracting.
 
-### Specify the `$PATH`
+To update later, run the same command again.
 
-If `~/.path` exists, it will be sourced along with the other files, before any feature testing (such as [detecting which version of `ls` is being used](https://github.com/joelpittet/dotfiles/blob/aff769fd75225d8f2e481185a71d5e05b76002dc/.aliases#L21-L26)) takes place.
+#### Updating
+To update your dotfiles, navigate to your local repository and pull the latest changes:
 
-Here’s an example `~/.path` file that adds `/usr/local/bin` to the `$PATH`:
+```bash
+cd ~/dotfiles
+git pull
+```
 
+### Homebrew (Brewfile)
+This repo includes both `brew.sh` and a `Brewfile`. If you prefer `brew bundle`, you can use:
+
+```bash
+brew bundle --file Brewfile
+```
+
+## Configuration
+
+### Custom PATH
+If `~/.path` exists, it will be sourced along with other files before any feature testing takes place.
+
+Example `~/.path` file:
 ```bash
 export PATH="/usr/local/bin:$PATH"
 ```
 
+### Git Credentials
+Set up your Git credentials by creating a `~/.gitconfig.local` file or running:
+
 ```bash
-# Git credentials
+# Set your Git credentials
 GIT_AUTHOR_NAME="Your Name"
 GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
 git config --global user.name "$GIT_AUTHOR_NAME"
@@ -70,29 +110,32 @@ GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
 git config --global user.email "$GIT_AUTHOR_EMAIL"
 ```
 
-You could also use `~/.extra` to override settings, functions and aliases from my dotfiles repository. It’s probably better to [fork this repository](https://github.com/joelpittet/dotfiles/fork) instead, though.
+### Additional Customizations
+You can use `~/.extra` to override settings, functions, and aliases from this dotfiles repository. However, it's recommended to [fork this repository](https://github.com/joelpittet/dotfiles/fork) for better version control.
 
-### Sensible macOS defaults
+## macOS Setup
 
-When setting up a new Mac, you may want to set some sensible macOS defaults:
+### System Preferences
+When setting up a new Mac, you may want to apply sensible macOS defaults:
 
 ```bash
 ./.macos
 ```
 
-### Install Homebrew formulae
+**Caution:** `./.macos` changes system settings. Read through the script and remove anything you don't want before running it.
 
-When setting up a new Mac, you may want to install some common [Homebrew](https://brew.sh/) formulae (after installing Homebrew, of course):
+### Homebrew Formulae
+Install common [Homebrew](https://brew.sh/) formulae:
 
 ```bash
 ./brew.sh
 ```
 
-Some of the functionality of these dotfiles depends on formulae installed by `brew.sh`. If you don’t plan to run `brew.sh`, you should look carefully through the script and manually install any particularly important ones. A good example is Bash/Git completion: the dotfiles use a special version from Homebrew.
+**Important:** Some functionality in these dotfiles depends on formulae installed by `brew.sh`. If you don't plan to run this script, manually install the essential packages, especially those required for Bash/Git completion.
 
 ## Feedback
 
-[Ping me on Twitter](http://twitter.com/joelpittet).
+[Ping me on Twitter](http://twitter.com/joelpittet) or open an issue on GitHub.
 
 ## Thanks
 
