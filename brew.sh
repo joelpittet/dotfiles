@@ -82,7 +82,7 @@ brew install the_silver_searcher
 brew install node
 brew install perl
 brew install php
-brew install python
+brew install python@3.14
 brew install ruby
 
 # Lanaguage Package managers.
