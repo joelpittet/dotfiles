@@ -8,18 +8,31 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-$(brew --prefix)}"
+if command -v brew >/dev/null 2>&1; then
+  HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-$(brew --prefix)}"
+elif [ -d /opt/homebrew ]; then
+  HOMEBREW_PREFIX="/opt/homebrew"
+elif [ -d /usr/local/Homebrew ] || [ -d /usr/local ]; then
+  HOMEBREW_PREFIX="/usr/local"
+fi
 
-# A very fast Zsh Theme.
-source "${HOMEBREW_PREFIX}/share/powerlevel10k/powerlevel10k.zsh-theme"
+if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
+  # A very fast Zsh Theme.
+  [[ -r "${HOMEBREW_PREFIX}/share/powerlevel10k/powerlevel10k.zsh-theme" ]] \
+    && source "${HOMEBREW_PREFIX}/share/powerlevel10k/powerlevel10k.zsh-theme"
 
-# Fish shell like syntax highlighting for zsh.
-source "${HOMEBREW_PREFIX}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+  # Fish shell like syntax highlighting for zsh.
+  [[ -r "${HOMEBREW_PREFIX}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] \
+    && source "${HOMEBREW_PREFIX}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
-# Auto autosuggestions.
-source "${HOMEBREW_PREFIX}/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  # Auto autosuggestions.
+  [[ -r "${HOMEBREW_PREFIX}/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] \
+    && source "${HOMEBREW_PREFIX}/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
-FPATH="${HOMEBREW_PREFIX}/share/zsh-completions:${FPATH}"
+  if [[ -d "${HOMEBREW_PREFIX}/share/zsh-completions" ]]; then
+    FPATH="${HOMEBREW_PREFIX}/share/zsh-completions:${FPATH}"
+  fi
+fi
 autoload -Uz compinit
 compinit
 
@@ -69,21 +82,27 @@ setopt correct
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # SSH Agent
-ssh-add -A &> /dev/null
+if [[ -n "${SSH_AUTH_SOCK:-}" ]]; then
+  ssh-add -A &> /dev/null || true
+fi
 
 # Zoxide.
-eval "$(zoxide init zsh)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
 
 # CHRuby.
-source "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/chruby.sh"
-# CHRuby switch based on .ruby-version files.
-source "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/auto.sh"
+if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
+  [[ -r "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/chruby.sh" ]] \
+    && source "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/chruby.sh"
+  # CHRuby switch based on .ruby-version files.
+  [[ -r "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/auto.sh" ]] \
+    && source "${HOMEBREW_PREFIX}/opt/chruby/share/chruby/auto.sh"
+fi
 
 # Disable zsh globbing (using wildcards in commands)
 unsetopt nomatch
 
 # Directory in iterm tab
-if [ $ITERM_SESSION_ID ]; then
+if [ -n "${ITERM_SESSION_ID:-}" ]; then
 precmd() {
   echo -ne "\033]0;${PWD##*/}\007"
 }
