@@ -2,15 +2,23 @@
 
 # ~/.macos — https://mths.be/macos
 
-# Close any open System Preferences panes, to prevent them from overriding
+if [[ "${APPLY_DEFAULTS:-}" != "1" ]]; then
+  echo "Set APPLY_DEFAULTS=1 to run: APPLY_DEFAULTS=1 ./.macos" >&2
+  exit 1
+fi
+
+# Close any open System Settings/Preferences panes, to prevent them from overriding
 # settings we’re about to change
-osascript -e 'tell application "System Preferences" to quit'
+osascript -e 'tell application "System Settings" to quit' >/dev/null 2>&1 || true
+osascript -e 'tell application "System Preferences" to quit' >/dev/null 2>&1 || true
 
 # Ask for the administrator password upfront
 sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until `.macos` has finished
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+SUDO_KEEPALIVE_PID=$!
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 
 ###############################################################################
 # General UI/UX                                                               #
@@ -377,13 +385,15 @@ defaults write com.apple.dock mineffect -string "scale"
 # Show indicator lights for open applications in the Dock
 # defaults write com.apple.dock show-process-indicators -bool true
 
-# Wipe all (default) app icons from the Dock
-# This is only really useful when setting up a new Mac, or if you don’t use
-# the Dock to launch apps.
-defaults write com.apple.dock persistent-apps -array
+if [[ "${APPLY_DOCK_RESET:-}" == "1" ]]; then
+  # Wipe all (default) app icons from the Dock
+  # This is only really useful when setting up a new Mac, or if you don’t use
+  # the Dock to launch apps.
+  defaults write com.apple.dock persistent-apps -array
 
-# Show only open applications in the Dock
-defaults write com.apple.dock static-only -bool true
+  # Show only open applications in the Dock
+  defaults write com.apple.dock static-only -bool true
+fi
 
 # Don’t animate opening applications from the Dock
 # defaults write com.apple.dock launchanim -bool false
