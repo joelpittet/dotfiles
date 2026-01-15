@@ -33,8 +33,8 @@ A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://githu
   ```bash
   xcode-select --install
   ```
-- [Homebrew](https://brew.sh/) installed (required for `./brew.sh` and most tooling)
-- GNU Stow installed (optional if you run `./brew.sh`, since it installs `stow`)
+- [Homebrew](https://brew.sh/) installed (required for `brew bundle` and most tooling)
+- GNU Stow installed (included in the Brewfile)
 
 ### Quick Start
 
@@ -46,7 +46,7 @@ A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://githu
 
 2. Install Homebrew formulae:
    ```bash
-   ./brew.sh
+   brew bundle --file Brewfile
    ```
 
 3. Create symlinks using stow (from inside the repo):
@@ -81,7 +81,7 @@ git pull
 ```
 
 ### Homebrew (Brewfile)
-This repo includes both `brew.sh` and a `Brewfile`. If you prefer `brew bundle`, you can use:
+Install the packages in the Brewfile:
 
 ```bash
 brew bundle --file Brewfile
@@ -128,10 +128,10 @@ When setting up a new Mac, you may want to apply sensible macOS defaults:
 Install common [Homebrew](https://brew.sh/) formulae:
 
 ```bash
-./brew.sh
+brew bundle --file Brewfile
 ```
 
-**Important:** Some functionality in these dotfiles depends on formulae installed by `brew.sh`. If you don't plan to run this script, manually install the essential packages, especially those required for Bash/Git completion.
+**Important:** Some functionality in these dotfiles depends on formulae installed by the Brewfile. If you don't plan to run it, manually install the essential packages, especially those required for Bash/Git completion.
 
 ## Feedback
 
