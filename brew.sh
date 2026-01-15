@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Install command-line tools using Homebrew.
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "Homebrew not found. Install from https://brew.sh/ and re-run." >&2
+  exit 1
+fi
 
 # Make sure we’re using the latest Homebrew.
 brew update
@@ -173,9 +179,9 @@ brew install zoxide
 brew cleanup
 
 # compaudit will complain about insecure permissions, lock them down.
-chmod g-w $(brew --prefix)/share
+if [ -d "${BREW_PREFIX}/share" ]; then
+  chmod g-w "${BREW_PREFIX}/share"
+fi
 
 # Setup vim backup folder.
-[ -d $HOME/.vim/backups ] || mkdir $HOME/.vim/backups
-[ -d $HOME/.vim/swaps ] || mkdir $HOME/.vim/swaps
-[ -d $HOME/.vim/undo ] || mkdir $HOME/.vim/undo
+mkdir -p "$HOME/.vim/backups" "$HOME/.vim/swaps" "$HOME/.vim/undo"
