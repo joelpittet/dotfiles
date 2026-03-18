@@ -94,3 +94,7 @@ function unquarantine() {
 function drush() {
   "$(git rev-parse --show-toplevel)/vendor/bin/drush" "$@"
 }
+
+
+# Time commands
+function t() { TIMEFMT='%E'; time "$@"; }
