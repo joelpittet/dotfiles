@@ -93,8 +93,6 @@ brew "patchutils"
 brew "pdfgrep"
 # General-purpose scripting language
 brew "php"
-# General-purpose scripting language
-brew "php@8.3"
 # Execute binaries from Python packages in isolated environments
 brew "pipx"
 # Package compiler and linker metadata toolkit

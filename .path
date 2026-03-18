@@ -38,11 +38,8 @@ fi
 export PATH="${BREW_PREFIX}/opt/python@3.14/libexec/bin:$PATH"
 
 # PHP
-#export PATH="${BREW_PREFIX}/opt/php/bin:$PATH"
-#export PATH="${BREW_PREFIX}/opt/php/sbin:$PATH"
-# Temporarily lock to 8.3 while packages catch up.
-export PATH="${BREW_PREFIX}/opt/php@8.3/bin:$PATH"
-export PATH="${BREW_PREFIX}/opt/php@8.3/sbin:$PATH"
+export PATH="${BREW_PREFIX}/opt/php/bin:$PATH"
+export PATH="${BREW_PREFIX}/opt/php/sbin:$PATH"
 
 # MySQL client
 export PATH="${BREW_PREFIX}/opt/mysql-client/bin:$PATH"
