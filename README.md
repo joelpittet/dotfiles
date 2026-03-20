@@ -5,7 +5,7 @@ A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://githu
 ## Features
 
 - **Shell**: Uses `zsh` with custom configurations
-- **Package Management**: Uses `stow` to manage symlinks to the git repository
+- **Package Management**: Uses `stow` to manage symlinks from this repository into `$HOME`
 - **Homebrew Integration**: Automated installation of useful formulae
 - **Git Aliases**: Comprehensive set of git and drush aliases for improved workflow
 - **macOS Defaults**: Sensible macOS system preferences and settings
@@ -56,8 +56,8 @@ A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://githu
 
    **Notes:**
    - If you have existing dotfiles, back them up first (or use `stow --adopt .` to adopt existing files into the repo).
+   - This repository currently uses a flat layout, so `stow --target="$HOME" .` is the intended install command.
    - `stow` will link most files in this repo into `$HOME`; exclusions are defined in `.stow-local-ignore`.
-   - Prefer stowing specific areas if you want a smaller footprint (example: `stow --target="$HOME" zsh`).
 
 ### Alternative Installation Methods
 
