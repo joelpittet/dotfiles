@@ -22,6 +22,7 @@ A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://githu
 - Git configuration (`.gitconfig`, `.gitignore`)
 - Editor configuration (`.editorconfig`)
 - macOS system preferences (`.macos`)
+- App-specific preferences kept outside the stow install path (`init/Preferences.sublime-settings`)
 
 ## Installation
 
@@ -58,6 +59,7 @@ A collection of macOS dotfiles based on [Mathias Bynens' dotfiles](https://githu
    - If you have existing dotfiles, back them up first (or use `stow --adopt .` to adopt existing files into the repo).
    - This repository currently uses a flat layout, so `stow --target="$HOME" .` is the intended install command.
    - `stow` will link most files in this repo into `$HOME`; exclusions are defined in `.stow-local-ignore`.
+   - `init/` is intentionally excluded from stow and currently holds app-specific bootstrap files such as Sublime Text preferences.
 
 ### Alternative Installation Methods
 
