@@ -3,6 +3,9 @@
 
 # Files not to keep.
 .vim/.netrwhist
+.vim/backups/
+.vim/swaps/
+.vim/undo/
 
 # Folder view configuration files
 .DS_Store
