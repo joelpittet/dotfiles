@@ -98,3 +98,117 @@ function drush() {
 
 # Time commands
 function t() { TIMEFMT='%E'; time "$@"; }
+
+# Frequent, security-first maintenance checks.
+function update() {
+  local brew_status="unavailable"
+  local npm_status="unavailable"
+  local composer_status="unavailable"
+  local brew_outdated=""
+  local composer_home=""
+  local composer_output=""
+  local composer_exit=0
+
+  echo "==> Security-first update"
+  echo
+
+  echo "==> Homebrew"
+  if command -v brew >/dev/null 2>&1; then
+    if brew update; then
+      brew_outdated="$(brew outdated 2>/dev/null)"
+      if [[ -n "$brew_outdated" ]]; then
+        printf '%s\n' "$brew_outdated"
+        echo "Homebrew does not support first-class security-only upgrades."
+        echo "If an advisory names a formula or cask, upgrade it explicitly with: brew upgrade <name>"
+        brew_status="manual action"
+      else
+        echo "No outdated formulae or casks reported."
+        brew_status="clean"
+      fi
+    else
+      echo "brew update failed."
+      brew_status="error"
+    fi
+  else
+    echo "Homebrew is not installed."
+  fi
+
+  echo
+  echo "==> npm"
+  if command -v npm >/dev/null 2>&1; then
+    echo "Global npm security audits are not supported by the npm CLI."
+    echo "No automatic remediation was attempted."
+    echo "Use \`upgrade-all\` for your broader monthly global npm updates."
+    npm_status="manual review"
+  else
+    echo "npm is not installed."
+  fi
+
+  echo
+  echo "==> Composer"
+  if command -v composer >/dev/null 2>&1; then
+    composer_home="$(composer global config home --absolute 2>/dev/null | tail -n 1)"
+    if [[ -n "$composer_home" && -d "$composer_home" ]]; then
+      composer_output="$(cd "$composer_home" && composer audit --format=summary --no-interaction 2>&1)"
+      composer_exit=$?
+      printf '%s\n' "$composer_output"
+
+      if [[ $composer_exit -eq 0 ]]; then
+        composer_status="clean"
+      elif [[ $composer_exit -eq 1 ]]; then
+        echo "Review the affected packages, then update only the impacted globals from $composer_home."
+        composer_status="manual action"
+      else
+        echo "composer audit failed."
+        composer_status="error"
+      fi
+    else
+      echo "Composer global home could not be determined."
+      composer_status="error"
+    fi
+  else
+    echo "Composer is not installed."
+  fi
+
+  echo
+  echo "Summary:"
+  echo "  Homebrew: $brew_status"
+  echo "  npm: $npm_status"
+  echo "  Composer: $composer_status"
+}
+
+# Broader monthly maintenance updates.
+function upgrade-all() {
+  echo "==> Full maintenance upgrade"
+
+  if command -v brew >/dev/null 2>&1; then
+    echo
+    echo "==> Homebrew"
+    brew update
+    brew upgrade
+    brew cleanup
+  fi
+
+  if command -v npm >/dev/null 2>&1; then
+    echo
+    echo "==> npm"
+    npm update -g
+  fi
+
+  if command -v gem >/dev/null 2>&1; then
+    echo
+    echo "==> RubyGems"
+    gem update --system
+  fi
+
+  if command -v composer >/dev/null 2>&1; then
+    echo
+    echo "==> Composer"
+    composer selfupdate
+    composer global update
+  fi
+
+  echo
+  echo "==> macOS"
+  sudo softwareupdate -i -a
+}
